@@ -1,0 +1,67 @@
+---
+title: "ROP_Simulations"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+require(mice)
+require(lattice)
+set.seed(123)
+
+nhanes
+```
+## Single Simulation of pmm MI
+
+```{r pressure, echo=FALSE}
+imp_pmm <- mice(nhanes, print=F)
+complete(imp_pmm)
+# plot(imp)
+
+```
+# Single Simulation of Random forest MI 
+```{r}
+initial <- mice(nhanes, maxit = 0)
+method <- initial$meth
+method["bmi"] <- "rf"
+method["hyp"] <- "rf"
+method["chl"] <- "rf"
+imp_rf <- mice(nhanes, meth = method, print=F)
+complete(imp_rf)
+# plot(imp)
+```
+##  Perform regression analysis on both sets of multiply imputed data:
+# pmm
+```{r}
+# [Choice of vars ~ Vignette2]
+fit_pmm <- with(imp_pmm, lm(bmi ~ chl))
+# fit_pmm
+pool.fit_pmm <- pool(fit_pmm)
+pool.fit_pmm
+```
+# rf
+```{r}
+# [Choice of vars ~ Vignette2]
+fit_rf <- with(imp_rf, lm(bmi ~ chl))
+pool.fit_rf <- pool(fit_rf)
+pool.fit_rf
+# want to extract estimates for intercept, slope, lambda, fmi values, place into df [seperate df from rf df.]
+#create data frame with 0 rows and 3 columns
+df_rf <- data.frame(matrix(ncol = 6, nrow = 0))
+
+#provide column names
+colnames(df_rf) <- c('intercept', 'slope', 'lambda_intercept', 'lambda_slope', 'fmi_intercept', 'fmi_slope')
+intercept <- pool.fit_rf$pooled[1,3]
+slope <- pool.fit_rf$pooled[2,3]
+lambda_intercept <- pool.fit_rf$pooled[1,10]
+lambda_slope <- pool.fit_rf$pooled[2,10]
+fmi_intercept <- pool.fit_rf$pooled[1,11]
+fmi_slope <- pool.fit_rf$pooled[2,11]
+df_rf[1, ] <- c(intercept, slope, lambda_intercept, lambda_slope, fmi_intercept, fmi_slope)
+
+
+```
