@@ -1,1 +1,44 @@
+```{r}
+require(mice)
+require(lattice)
+require(tidyverse)
+# StackExchange example for adding NA values to df.
+A <- c(1:10)
+B <- c(11:20)
+C <- c(21:30)
+dff<- data.frame(A,B,C)
+dff <- unlist(dff)
+n <- length(dff) * 0.15
+dff[sample(dff, n)] <- NA
+as.data.frame(matrix(dff, ncol=3))
+```
+
+```{r}
+normal_data = rnorm(100, 0, 1)
+norm_df <- data.frame()
+norm_df %>% 
+  mutate(value = as.character(normal_data))
+
+```
+
+
+```{r}
+
+m = 100
+mu = 0
+rho = 1
+# create normal distn and store as dataframe.
+normal_data = rnorm(m, mu, rho)
+norm_df <- data.frame(matrix(ncol = 1, nrow = 100))
+colnames(norm_df) = "value"
+for (i in 1:m){
+  norm_df[i,] = normal_data[i]}
+# remove 15% of normally distributed data randomly
+norm_df <- unlist(norm_df)
+n <- length(norm_df) * 0.15
+norm_df[sample(norm_df, n)] <- NA
+as.data.frame(matrix(norm_df, ncol=1))
+
+# ggplot(data = normal_data, aes(x= ) )
+```
 
