@@ -2,6 +2,11 @@
 require(mice)
 require(lattice)
 require(tidyverse)
+
+
+```
+
+```{r}
 # StackExchange example for adding NA values to df.
 A <- c(1:10)
 B <- c(11:20)
@@ -14,15 +19,6 @@ dff<- data.frame(A,B,C)
 df <- data.frame(A = 1:10, B = 11:20, c = 21:30)
 
 as.data.frame(lapply(df, function(cc) cc[ sample(c(TRUE, NA), prob = c(0.80, 0.20), size = length(cc), replace = TRUE) ]))
-
-```
-
-```{r}
-# normal_data = rnorm(100, 0, 1)
-# norm_df <- data.frame()
-# norm_df %>% 
-#   mutate(value = as.character(normal_data))
-
 ```
 
 
@@ -44,7 +40,7 @@ realistic_norm_df <- as.data.frame(lapply(norm_df, function(cc) cc[ sample(c(TRU
 realistic_norm_df
 
 ```
-# pmm MI
+# pmm MI [self-made dataset]
 ```{r}
 num_sim = 10
 df = realistic_norm_df
@@ -74,7 +70,7 @@ df_pmm
 # obtain summary statistics for num_sim simulations.
 summary(df_pmm)
 ```
-# norm MI
+# norm MI [self-made dataset]
 ```{r}
 num_sim = 10
 df = realistic_norm_df
@@ -109,7 +105,117 @@ summary(df_norm)
 
 
 ```{r}
-# temp, Wind reasonably normal
+# temp, Wind reasonably normal:
 hist(airquality$Temp)
+# Finding true value of B_1 (Q) using complete dataset:
+
+df <- as_tibble(airquality[,3]) %>% 
+  add_column(airquality[,4]) %>%
+  rename(Wind = value, 
+         Temp = "airquality[, 4]") 
+fit_complete <- with(df, lm(Temp ~ Wind))
+fit_complete$coefficients[2]
+```
+```{r}
+# Add missingness to ~20% of Wind variable observations. 
+df_wind_miss <- as.data.frame(lapply(df[1], function(cc) cc[ sample(c(TRUE, NA), prob = c(0.80, 0.20), size = length(cc), replace = TRUE) ])) %>% 
+  add_column(airquality[,4]) %>% 
+  rename(Temp = "airquality[, 4]")
+df_wind_miss  
+
+
+```
+## MI: pmm
+```{r}
+num_sim = 100
+df = df_wind_miss
+df_pmm <- data.frame(matrix(ncol = 6, nrow = 0))
+colnames(df_pmm) <- c('intercept', 'slope', 'lambda_intercept', 'lambda_slope', 'fmi_intercept', 'fmi_slope')
+imp_pmm <- mice(df, print=F)
+  # perform regression analysis
+  fit_pmm <- with(imp_pmm, lm(Temp ~ Wind))
+  summary(fit_pmm)
+  pool.fit_pmm <- pool(fi_pmm)
+for (i in 1:num_sim){
+  # Perform imputation. Without seed = i, I obtain same results for every single iteration of for loop.
+  imp_pmm <- mice(df, print=F, seed = i)
+  # perform regression analysis
+  fit_pmm <- with(imp_pmm, lm(temp ~ wind))
+  pool.fit_pmm <- pool(fit_pmm)
+  # Input estimators to df
+  intercept <- pool.fit_pmm$pooled[1,3]
+  slope <- pool.fit_pmm$pooled[2,3]
+  lambda_intercept <- pool.fit_pmm$pooled[1,10]
+  lambda_slope <- pool.fit_pmm$pooled[2,10]
+  fmi_intercept <- pool.fit_pmm$pooled[1,11]
+  fmi_slope <- pool.fit_pmm$pooled[2,11]
+  df_pmm[i, ] <- c(intercept, slope, lambda_intercept, lambda_slope, fmi_intercept, fmi_slope)
+}
+df_pmm
+# obtain summary statistics for num_sim simulations.
+summary(df_pmm)
+
+
+```
+
+```{r}
+
+
+
+```
+```{r}
+## FAILED ATTEMPT TO APPLY Section 2.5's code to my situation (doesn't even run for me anyway..)
+# test.impute <- function(data, m = 5, method = "norm", ...) {
+#   imp <- mice(data, method = method, m = m, print = FALSE, ...)
+#   fit <- with(imp, lm(Temp ~ Wind))
+#   tab <- summary(pool(fit), "all", conf.int = TRUE)
+#   as.numeric(tab["x", c("estimate", "2.5 %", "97.5 %")])
+# }
+# test.impute(df_wind_miss, method = "norm", m = 2)
+# runs = 10
+# res <- array(NA, dim = c(2, runs, 3))
+# imp <- mice(df_wind_miss, method = "norm", m = 2)
+# fit <- with(imp, lm(Temp ~ Wind))
+# tab <- summary(pool(fit), "all", conf.int = TRUE)
+# as.numeric(tab["Wind", c("estimate", "2.5 %", "97.5 %")])
+# apply(res, c(1, 3), mean, na.rm = TRUE)
+# 
+# create.data <- function(beta = 1, sigma2 = 1, n = 50,
+#                         run = 1) {
+#   set.seed(seed = run)
+#   x <- rnorm(n)
+#   y <- beta * x + rnorm(n, sd = sqrt(sigma2))
+#   cbind(x = x, y = y)
+# }
+# make.missing <- function(data, p = 0.5){
+#   rx <- rbinom(nrow(data), 1, p)
+#   data[rx == 0, "x"] <- NA
+#   data
+# }
+# make.missing(df)
+# 
+# simulate <- function(runs = 10) {
+#   res <- array(NA, dim = c(2, runs, 3))
+#   dimnames(res) <- list(c("pmm", "norm"),
+#                         as.character(1:runs),
+#                         c("estimate", "2.5 %","97.5 %"))
+#   for(run in 1:runs) {
+#     
+#     res[1, run, ] <- test.impute(df_wind_miss, method = "pmm",
+#                                  m = 2)
+#     res[2, run, ] <- test.impute(df_wind_miss, method = "norm")
+#   }
+#   res
+# }
+# res <- simulate()
+# 
+# apply(res, c(1, 3), mean, na.rm = TRUE)
+# true <- 1
+# RB <- rowMeans(res[,, "estimate"]) - true
+# PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+# CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
+# AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
+# RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+# data.frame(RB, PB, CR, AW, RMSE)
 ```
 
