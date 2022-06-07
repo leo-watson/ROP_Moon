@@ -7,17 +7,21 @@ A <- c(1:10)
 B <- c(11:20)
 C <- c(21:30)
 dff<- data.frame(A,B,C)
-dff <- unlist(dff)
-n <- length(dff) * 0.15
-dff[sample(dff, n)] <- NA
-as.data.frame(matrix(dff, ncol=3))
+# dff <- unlist(dff)
+# n <- length(dff) * 0.15
+# dff[sample(dff, n)] <- NA
+# as.data.frame(matrix(dff, ncol=3))
+df <- data.frame(A = 1:10, B = 11:20, c = 21:30)
+
+as.data.frame(lapply(df, function(cc) cc[ sample(c(TRUE, NA), prob = c(0.80, 0.20), size = length(cc), replace = TRUE) ]))
+
 ```
 
 ```{r}
-normal_data = rnorm(100, 0, 1)
-norm_df <- data.frame()
-norm_df %>% 
-  mutate(value = as.character(normal_data))
+# normal_data = rnorm(100, 0, 1)
+# norm_df <- data.frame()
+# norm_df %>% 
+#   mutate(value = as.character(normal_data))
 
 ```
 
@@ -33,12 +37,79 @@ norm_df <- data.frame(matrix(ncol = 1, nrow = 100))
 colnames(norm_df) = "value"
 for (i in 1:m){
   norm_df[i,] = normal_data[i]}
-# remove 15% of normally distributed data randomly
-norm_df <- unlist(norm_df)
-n <- length(norm_df) * 0.15
-norm_df[sample(norm_df, n)] <- NA
-as.data.frame(matrix(norm_df, ncol=1))
+# remove ~20% of normally distributed data randomly. Add age variable with no NA values, where age is random value between 0 and 100. Has no missing values. Need at least 2 variables otherwise can't run MI (obviously).
+realistic_norm_df <- as.data.frame(lapply(norm_df, function(cc) cc[ sample(c(TRUE, NA), prob = c(0.80, 0.20), size = length(cc), replace = TRUE) ])) %>% 
+  add_column(age = floor(runif(100, min=0, max=101))) %>% 
+  relocate(age) 
+realistic_norm_df
 
-# ggplot(data = normal_data, aes(x= ) )
+```
+# pmm MI
+```{r}
+num_sim = 10
+df = realistic_norm_df
+df_pmm <- data.frame(matrix(ncol = 6, nrow = 0))
+colnames(df_pmm) <- c('intercept', 'slope', 'lambda_intercept', 'lambda_slope', 'fmi_intercept', 'fmi_slope')
+
+imp_pmm <- mice(df, print=F)
+complete(imp_pmm)
+# plot(imp)
+
+for (i in 1:num_sim){
+  # Perform imputation. Without seed = i, I obtain same results for every single iteration of for loop.
+  imp_pmm <- mice(df, print=F, seed = i)
+  # perform regression analysis
+  fit_pmm <- with(imp_pmm, lm(value ~ age))
+  pool.fit_pmm <- pool(fit_pmm)
+  # Input estimators to df
+  intercept <- pool.fit_pmm$pooled[1,3]
+  slope <- pool.fit_pmm$pooled[2,3]
+  lambda_intercept <- pool.fit_pmm$pooled[1,10]
+  lambda_slope <- pool.fit_pmm$pooled[2,10]
+  fmi_intercept <- pool.fit_pmm$pooled[1,11]
+  fmi_slope <- pool.fit_pmm$pooled[2,11]
+  df_pmm[i, ] <- c(intercept, slope, lambda_intercept, lambda_slope, fmi_intercept, fmi_slope)
+}
+df_pmm
+# obtain summary statistics for num_sim simulations.
+summary(df_pmm)
+```
+# norm MI
+```{r}
+num_sim = 10
+df = realistic_norm_df
+# stores estimators for each of the simulations
+df_norm <- data.frame(matrix(ncol = 6, nrow = 0))
+colnames(df_norm) <- c('intercept', 'slope', 'lambda_intercept', 'lambda_slope', 'fmi_intercept', 'fmi_slope')
+
+for (i in 1:num_sim){
+  # Perform imputation. Without seed = i, I obtain same results for every single iteration of for loop.
+  initial <- mice(df, maxit = 0)
+  method <- initial$meth
+  method["value"] <- "norm"
+  imp_norm <- mice(df, meth = method, print=F, seed = i)
+  # perform regression analysis
+  fit_norm <- with(imp_norm, lm(value ~ age))
+  pool.fit_norm <- pool(fit_norm)
+  # Input estimators to df
+  intercept <- pool.fit_norm$pooled[1,3]
+  slope <- pool.fit_norm$pooled[2,3]
+  lambda_intercept <- pool.fit_norm$pooled[1,10]
+  lambda_slope <- pool.fit_norm$pooled[2,10]
+  fmi_intercept <- pool.fit_norm$pooled[1,11]
+  fmi_slope <- pool.fit_norm$pooled[2,11]
+  df_norm[i, ] <- c(intercept, slope, lambda_intercept, lambda_slope, fmi_intercept, fmi_slope)
+}
+df_norm
+# obtain summary statistics for num_sim simulations.
+summary(df_norm)
+```
+
+
+
+
+```{r}
+# temp, Wind reasonably normal
+hist(airquality$Temp)
 ```
 
