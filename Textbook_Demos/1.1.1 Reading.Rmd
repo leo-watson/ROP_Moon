@@ -1,0 +1,49 @@
+---
+title: "Flexible Imputation of MIssing Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+airquality
+
+```
+
+```{r cars}
+options(na.action = na.omit)
+fit <- lm(Ozone ~ Wind, data = airquality)
+head(na.action(fit))
+# airquality2 <- cbind(airquality, predict(fit))
+naprint(na.action(fit))
+airquality2 <- cbind(na.omit(airquality[, c("Ozone", "Wind")]),
+                     predicted = predict(fit))
+# Trying to recreate Figure 1.1
+airquality2 %>%
+  ggplot(aes(x=Ozone, y= predicted)) + 
+  geom_point() + 
+  labs(x = "Ozone measured (ppb)",
+       y = "Ozone predicted") +
+  geom_smooth(method="lm", se=FALSE)
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

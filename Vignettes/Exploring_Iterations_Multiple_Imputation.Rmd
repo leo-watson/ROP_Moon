@@ -1,0 +1,57 @@
+---
+title: "Exploring_Iterations_Multiple_Imputation"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+
+
+```
+
+```{r}
+## TESTING what happens to plot when we have only one predictor variable (bmi imputed solely on chl) HYPOTHESIS: Each iteration gives same value, b/c each time the imputed values are the same. 
+## CONCLUSION [see code chunk below]: HAVING SINGLE PREDICTOR IS UNRELATED! Randomness is due to pmm as initial imputation method!!!
+require(mice)
+require(lattice)
+
+imp <- mice(nhanes, m = 3, print=F, seed = 123)
+pred <- imp$pred
+
+pred[ ,"hyp"] <- 0
+pred[,"chl"] <- 0
+pred
+imp <- mice(nhanes, pred=pred, print=F)
+plot(imp)
+```
+
+```{r}
+## REVISTING ABOVE CODE
+## Reason bmi plots were not horizontal lines is BECAUSE WE WERE USING PMM [which has inherent randomness]! By setting our initial imputation method to mean imputation [no randomness], we obtain horizontal plots! Note that this was a test for my understanding of MI. NOT a good idea to use this in practice b/c defeats purpose of multiple imputation.
+
+
+require(mice)
+require(lattice)
+
+imp <- mice(nhanes, m = 3, print=F, seed = 123)
+pred <- imp$pred
+meth <- imp$meth
+meth["bmi"] <- "mean"
+meth["hyp"] <- "mean"
+meth["chl"] <- "mean"
+
+
+# pred[ ,"hyp"] <- 0
+# pred[,"chl"] <- 0
+pred
+
+imp <- mice(nhanes, pred=pred,meth = meth, print=F)
+plot(imp)
+```
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

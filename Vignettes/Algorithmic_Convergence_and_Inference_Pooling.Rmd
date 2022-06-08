@@ -1,0 +1,119 @@
+---
+title: "Algorithmic convergence and inference pooling"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(mice)
+require(lattice)
+set.seed(123)
+```
+
+```{r cars}
+# Multiple imputation with 3 imputations.
+imp <- mice(nhanes, m = 3, print=F, seed = 123)
+# In predictor matrix, 1 entry in row x column indicates that the column variable was used to impute the row variable [Note diagonals always 0 b/c var cannot impute itself.]
+imp$pred
+
+```
+
+```{r}
+# We can determine predictor matrix for an initial run of mice with zero iterations:
+ini <- mice(nhanes, maxit=0, print=F)
+pred <- ini$pred
+pred
+```
+
+```{r}
+# We can remove a variable (or two) from the predictors, while still leaving it to be predicted by other variables:
+pred[ ,"hyp"] <- 0
+
+## TESTING what happens to plot when we have only one predictor variable (bmi imputed solely on chl) HYPOTHESIS: Each iteration gives same value, b/c each time the imputed values are the same. 
+pred[,"chl"] <- 0
+pred
+imp <- mice(nhanes, pred=pred, print=F)
+plot(imp)
+
+```
+
+```{r pressure, echo=FALSE}
+# We can use our altered predictor matrix from above for multiple imputation:
+imp <- mice(nhanes, pred=pred, print=F)
+# The quickpred() function is powerful for efficiently selecting desired variable predictors (e.g. helpful if lots of variables). The code below selects predictors with a miinimum correlation rho = 0.3: 
+ini <- mice(nhanes, pred=quickpred(nhanes, mincor=.3), print=F)
+ini$pred
+# Observe now for example that bmi isn't used to predict hyp.
+# For large predictors matrices (lots of vars), may be useful to export to Excel using xlsx package.
+```
+```{r}
+# mice() performs an iterative "Markov Chain Monte Carlo" type of algorithm.
+imp <- mice(nhanes, seed=123, print=F)
+# Plot shows means/standard devs of each of the imputed variables [not age b/c age data was complete]. x-axis is # of iterations [maxit = 5 by default], # of lines is # of imputations [m = 5 by default], y-axis is simply value.
+plot(imp)
+```
+## 4 Changing the Imputation Method
+```{r}
+# We can determine what imputation method is used for our complete data set. The default imputation method is predictive meaning matching as shown below. Note that variables are numerical and hence all share pmm method.
+imp$meth
+# Conversly, nhanes2 has hyp as a binary variable. Hence, the mice() function automatically takes this into account and applies logistic regression (as opposed to pmm).
+# summary(nhanes2)
+str(nhanes2)
+imp <- mice(nhanes2, print=F)
+imp$meth
+```
+```{r}
+# methods(mice)
+# We can also manually change the imputation method for predictors, e.g. from pmm to Bayesian normal linear Regression imputation:
+ini <- mice(nhanes2, maxit = 0)
+meth <- ini$meth
+meth
+# Key step
+meth["bmi"] <- "norm"
+meth
+# Apply imputation using changed method.
+imp <- mice(nhanes2, meth = meth, print=F)
+plot(imp)
+
+```
+## 5 Extend the Number of Iterations
+```{r}
+# This is a way of EXTENDING [i.e. adding] iterations to an already specified dataset (imp). Ofc, creating dataset from scratch with maxit=40 is an option.
+imp40 <- mice.mids(imp, maxit=35, print=F)
+plot(imp40)
+
+```
+## 6 Further diagnostic checking. Use function stripplot()
+```{r}
+stripplot(imp, chl~.imp, pch=20, cex=2)
+```
+```{r}
+stripplot(imp)
+```
+## 7 Perform the following regression analysis on the multiply imputed data. Store the solution in object fit.
+```{r}
+# Goal: obtain linear form bmi = B_{0}+ B_{1}(chl) + \epsilon
+# Fit linear regression model using imputed data where bmi is response, chl is predictor
+fit <- with(imp, lm(bmi ~ chl))
+# "Fit" object contains regression summaries for each of the 5 imputed datasets. 
+fit
+```
+```{r}
+# Note "fit" is of class mira:
+class(fit)
+# ———KEY IDEA———: can use ls() function to find out what's stored in fit. (Similar to ls(imp))
+ls(fit)
+# To get more information about imputed dataset 2, we can extract analyses coefficients and then apply summary().
+summary(fit$analyses[[2]])
+
+
+
+
+```
+## 8 Pool the analyses from object fit.
+```{r}
+# Gives relevnat pooled regression coefficients, fraction of information about the coefficients missing due to nonresponse (gamma; fmi), proportion of variation attributable to missing data (lambda)
+pool.fit <- pool(fit)
+pool.fit
+```
+

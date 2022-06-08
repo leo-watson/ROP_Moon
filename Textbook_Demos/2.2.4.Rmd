@@ -1,0 +1,38 @@
+---
+title: "2.2.4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+# Definite logistic function [~ 2.2.4 Definition]
+logistic <- function(x) exp(x) / (1 + exp(x))
+set.seed(80122)
+n <- 300
+# 300 observations. STANDARD Bivariate normal => mu1 = mu2 = 0, rho1 = rho2 = 1, and correlation given as 0.5 [gives us Sigma matrix] 
+y <- MASS::mvrnorm(n = n, mu = c(0, 0),
+                   Sigma = matrix(c(1, 0.5, 0.5, 1), nrow = 2))
+# Creating missing data models for each of MCAR, MAR, MNAR cases.
+r2.mcar <- 1 - rbinom(n, 1, 0.5)
+r2.mar  <- 1 - rbinom(n, 1, logistic(y[, 1]))
+r2.mnar <- 1 - rbinom(n, 1, logistic(y[, 2]))
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

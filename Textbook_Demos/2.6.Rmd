@@ -1,0 +1,83 @@
+---
+title: '2.6'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+# Creates function that create a dataset with 50 x values 
+create.data <- function(beta = 1, sigma2 = 1, n = 50,
+                        run = 1) {
+  set.seed(seed = run)
+  x <- rnorm(n)
+  y <- beta * x + rnorm(n, sd = sqrt(sigma2))
+  cbind(x = x, y = y)
+}
+# Creates function that removes 50% of data from dataset.
+make.missing <- function(data, p = 0.5){
+  rx <- rbinom(nrow(data), 1, p)
+  data[rx == 0, "x"] <- NA
+  data
+}
+# Function that calls mice (applying imputation) and applies Rubin's Rules, and creates 95% confidence intervals for parameter
+test.impute <- function(data, m = 5, method = "norm", ...) {
+  imp <- mice(data, method = method, m = m, print = FALSE, ...)
+  fit <- with(imp, lm(y ~ x))
+  tab <- summary(pool(fit), "all", conf.int = TRUE)
+  as.numeric(tab["x", c("estimate", "2.5 %", "97.5 %")])
+}
+
+
+# function calculating rmse for true and multiply imputed data in x
+rmse <- function(truedata, imp, v = "x") {
+  mx <- is.na(mice::complete(imp, 0))[, v]
+  mse <- rep(NA, imp$m)
+  for (k in seq_len(imp$m)) {
+    filled <- mice::complete(imp, k)[mx, v]
+    true <- truedata[mx, v]
+    mse[k] <- mean((filled - true)^2)
+  }
+  sqrt(mean(mse))
+}
+
+
+```
+
+```{r}
+# Create missing data [same as 2.5.3, but also now calculating RMSE]
+simulate2 <- function(runs = 10) {
+  res <- array(NA, dim = c(2, runs, 1))
+  dimnames(res) <- list(c("norm.predict", "norm.nob"),
+                        as.character(1:runs),
+                        "RMSE")
+  for(run in 1:runs) {
+    truedata <- create.data(run = run)
+    data <- make.missing(truedata)
+    imp <- mice(data, method = "norm.predict", m = 1,
+                print = FALSE)
+    res[1, run, ] <- rmse(truedata, imp)
+    imp <- mice(data, method = "norm.nob", print = FALSE)
+    res[2, run, ] <- rmse(truedata, imp)
+  }
+  res
+}
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,112 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+require(mice)
+require(lattice)
+set.seed(123)
+```
+
+```{r}
+# Passive imputation deals with "transformed, combined, or recoded version of data" i.e. data that has variables with a relationship with each other. [e.g. BMI = weight/ height^2]
+## GOAL: Use passive imputation to determine the deterministic sleep relation in the mammasleep data. Name the new multiply imputed dataset pas.imp.
+ # multiple imputation with 5 imputations, 0 iterations with species removed as a predictor. 
+ini <- mice(mammalsleep[, -1], maxit=0, print=F)
+# imputation methods for each of the variables. Note bw/brw/pi/se/odi are missing methods b/c NO MISSING VALUES.
+meth<- ini$meth
+meth
+# RECALL: 1 in i-th column means it's a predictor for j-th var.
+pred <- ini$pred
+pred
+# make sure total sleep NOT predictor of slow wave sleep OR paradoxical sleep. CUSTOM PREDICTOR MATRIX
+pred[c("sws", "ps"), "ts"] <- 0
+pred
+# Custom method vector for imputation 
+meth["ts"]<- "~ I(sws + ps)"
+# Apply multiple imputation using 10 iterations using new method/predictor matrix, label the new dataset pas.imp.
+pas.imp <- mice(mammalsleep[, -1], meth=meth, pred=pred, maxit=10, seed=123, print=F)
+```
+## Inspecting trace lines
+```{r}
+# Lines (apparently) converge better than in vignette 3's final plot. Traces lines "look better."
+plot(pas.imp)
+
+
+```
+## NOW USING BOYS DATA
+## Post-Processing.(4) Using norm as imputation method for tv, constraining values between 1 and 25.
+```{r}
+# multiple imputation w/ 0 iteratios
+ini <- mice(boys, maxit = 0)
+meth <- ini$meth
+# change imputation method to linear regression imputation
+meth["tv"] <- "norm"
+# squeeze tv imputed values between 1 and 25
+post <- ini$post
+post["tv"] <- "imp[[j]][, i] <- squeeze(imp[[j]][, i], c(1, 25))"
+imp <- mice(boys, meth=meth, post=post, print=FALSE)
+summary(complete(imp)$tv)
+```
+## (5) Compare imputations of pmm with norm constrained between 1 and 25.
+
+```{r}
+# imp.pmm is pmm, UNCONSTRIANED. imp is norm, CONSTRAINED.
+imp.pmm <- mice(boys, print=FALSE)
+table(complete(imp)$tv)
+table(complete(imp.pmm)$tv)
+# Observations: imp gives us non-integer imputations.
+# Constrained Solution: Histogram for complete imputed data (5 red lines), incomplete data (blue line)
+densityplot(imp, ~tv)
+densityplot(imp.pmm, ~tv)
+```
+```{r}
+# Plotting both imputation methods on same graphic: (create new data frame, histogram conditional on type of imputation
+tv <- c(complete(imp.pmm)$tv, complete(imp)$tv)
+method <- rep(c("pmm", "norm"), each = nrow(boys))
+tvm <- data.frame(tv = tv, method = method)
+histogram( ~tv | method, data = tvm, nint = 25)
+
+```
+
+```{r}
+# missing data indicator for missing bmi
+miss <- is.na(imp$data$bmi)
+# create plot where red is imputed data and blue is calculated data. We observe imputed data doesn't follow same relation in pmm model, and thus we SHOULD use passive imputation for boys data.
+xyplot(imp, bmi ~ I (wgt / (hgt / 100)^2),
+       na.groups = miss, cex = c(0.8, 1.2), pch = c(1, 20),
+       ylab = "BMI (kg/m2) Imputed", xlab = "BMI (kg/m2) Calculated")
+```
+## (7) Using passive imputation (FOR BOYS DATA THIS TIME)
+```{r}
+# passive imputation for bmi (b/c has relationship with wgt and hgt variables)
+meth<- ini$meth
+meth["bmi"]<- "~ I(wgt / (hgt / 100)^2)"
+imp <- mice(boys, meth=meth, print=FALSE)
+# Plotting imputed values (red) of bmi vs calculated values (blue) to determine convergence (yes there is at bottom left corner).
+xyplot(imp, bmi ~ I(wgt / (hgt / 100)^2), na.groups = miss,
+       cex = c(1, 1), pch = c(1, 20),
+       ylab = "BMI (kg/m2) Imputed", xlab = "BMI (kg/m2) Calculated")
+
+plot(imp, c("bmi"))
+# Note that still convergence isn't optimal (apparently) and have some absurd imputations (top right ones). This is due to circularity in imputations, i.e we used passive imputation for bmi BUT bmi is also used as predictor for wgt and hgt. Must change this by adjusting predictor matrix.
+pred<-ini$pred
+pred[c("hgt", "wgt"), "bmi"] <- 0
+pred
+
+# re-run multiple imputation with updated predictor matrix.
+imp <-mice(boys, meth=meth, pred=pred, print=FALSE)
+# Recreate earlier plot but without circularity. Note we now don't have those absurd huge imputations, have better convergence (apparently).
+xyplot(imp, bmi ~ I(wgt / (hgt / 100)^2), na.groups = miss,
+       cex=c(1, 1), pch=c(1, 20),
+       ylab="BMI (kg/m2) Imputed", xlab="BMI (kg/m2) Calculated")
+plot(imp, c("bmi"))
+
+```
+
+

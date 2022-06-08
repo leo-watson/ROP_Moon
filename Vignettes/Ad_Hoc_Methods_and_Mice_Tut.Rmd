@@ -1,0 +1,127 @@
+---
+title: '"Ad hoc methods and mice" Tutorial'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+require(mice)
+require(lattice)
+set.seed(123)
+```
+
+```{r}
+nhanes
+summary(nhanes)
+```
+
+```{r}
+md.pattern(nhanes)
+# Right vertical indicates # of missing values
+# Bottom horizontal indicates # of missing values for each var in top horizontal
+# left vertical indicates # of values corresponding to that configuration of missingness (13 with 0 missing, 3 with only chl missing, 7 with hyp, bmi, chl missing)
+```
+
+## Mean Imputation
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+# Forms a regression model, predicting age w.r.t bmi
+fit <- with(nhanes, lm(age ~ bmi))
+summary(fit)
+# Impute missing values using mean imputation
+imp <- mice(nhanes, method = "mean", m = 1, maxit = 1)
+# View imputed dataset
+complete(imp)
+# Confirms each variable's mean is the imputed value
+colMeans(nhanes, na.rm = TRUE)
+
+```   
+# Post MeanImputation Analysis
+```{r}
+# Fit same linear reg model to imputed dataset. 
+fit <- with(imp, lm(age ~ bmi))
+summary(fit)
+# Find distribution of bmi. Note only difference is increased weighting of the mean.
+densityplot(nhanes$bmi)
+densityplot(complete(imp)$bmi)
+
+
+```
+## Regression Imputation
+```{r}
+# Apply regression imputation to original dataset.
+imp <- mice(nhanes, method = "norm.predict", m = 1, maxit = 1)
+complete(imp)
+# Imputed values for bmi, depend on age now [similarly for hyp and chl]
+
+```
+## Analysis
+```{r}
+fit <- with(imp, lm(age ~ bmi))
+summary(fit)
+```
+## Stochastic Regression Imputation
+```{r}
+imp <- mice(nhanes, method = "norm.nob", m = 1, maxit = 1)
+complete(imp)
+
+```
+## Analysis
+```{r}
+fit <- with(imp, lm(age ~ bmi))
+summary(fit)
+```
+## Stochastic Regression Imputation [Fixed Seed]
+```{r}
+imp <- mice(nhanes, method = "norm.nob", m = 1, maxit = 1, seed = 123)
+fit <- with(imp, lm(age ~ bmi))
+summary(fit)
+```
+## Multiple Imputation
+```{r}
+# Apply Multiple imputation. Default # of imputations is 5 [i.e. m = 5], and # of iterations is 5 [how many times we repeat the imputation procedure]. "print=F" omits printing of iteration cycle.
+imp <- mice(nhanes, print=F)
+imp
+```
+## Analysis
+```{r}
+# Shows all the information stores in imp [original data, imputed data, # of missing vaues, etc.]
+attributes(imp)
+# Pulls up dataframes containing all the imputed values for each of the 5 imputations, for each of the vars.
+imp$imp
+
+
+
+```
+```{r}
+# Extract the 3rd imputed dataset.
+c3 <- complete(imp, 3) 
+# Shows us all 25 obsevations have no missing variables [obviously since we imputed them..]
+md.pattern(c3)
+```
+```{r}
+# Creates single VERTICALLY STACKED dataframe for all 5 imputations.
+c.long <- complete(imp, "long")  
+c.long
+```
+
+```{r}
+# Creates a single HORIZONTALLY STACKED dataframe for all 5 imputations. NOTE thi is essentially same as "long" but transposed.
+c.broad <- complete(imp, "broad")
+c.broad
+```
+```{r}
+c.huge <- complete(imp, "all")
+c.huge
+```
+

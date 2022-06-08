@@ -1,0 +1,102 @@
+---
+title: "The Imputation and Nonresponse Models"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(mice)
+require(lattice)
+set.seed(123)
+```
+
+
+```{r cars}
+help(boys)
+?boys
+# Note if either of hgt or wgt is missing for a boy, then bmi will also be missing 
+head(boys)
+summary(boys)
+# md.pattern() tells us there's 13 different patterns of missingness, with gen/phb/tv missing being the most common 437/748
+md.pattern(boys)
+# Can determine how many of the patterns have gen missing as shown below.
+mpat <- md.pattern(boys)
+sum(mpat[, "gen"] == 0)
+
+
+```
+## 6
+
+```{r pressure, echo=FALSE}
+# boys$gen creates dataframe with genital stages for all 748 boys. is.na() inputs "TRUE" if empty, "FALSE" if inputted 
+R <- is.na(boys$gen) 
+R
+# Create histogram of (inputted) genital stages, measuring % of total boys.
+histogram(boys$gen)
+# MORE EFFICIENT WAY [doesn't require loading the WHOLE boys dataset] for same plot.
+histogram(~ gen, data = boys)
+# distribution of age as histogram, conditional on na or not-na gen values. Demonstrates that missingness in gen isn't equally distributed for age [more missingness for higher ages]
+histogram(~age|R, data=boys)
+
+```
+
+## (7): Imputing dataset 
+```{r}
+imp1 <- mice(boys, print=FALSE)
+# Compare the means of the imputed data [imp1] and the incomplete data [boys]
+summary(boys)
+summary(complete(imp1))
+#Upon comparison, we note roughly equal values for imputed/incomplete data, except for tv mean (much lower for imputed data). Makes sense b/c missing values are younger age children.
+# If we want to extract only information about tv means for each of the (5) imputations, can use with() function:
+summary(with(imp1, mean(tv)))
+
+
+```
+## Importance of the Imputation Method
+```{r}
+# Getting overview of the data. Patterns of missingness, etc.
+help(mammalsleep)
+head(mammalsleep)
+summary(mammalsleep)
+str(mammalsleep)
+md.pattern(mammalsleep)
+
+
+```
+```{r}
+# Generating imputed datasets. 5 imputations, 10 iterations.
+imp <- mice(mammalsleep, maxit = 10, print=F)
+# Recall that # of lines is # of imputations.
+plot(imp)
+
+```
+## Analysis [Attempt 1]
+```{r}
+# Independent Variables: log(body weight), overall danger index 
+# Dependent Variable: sws
+# Fit (multiple linear) regression model
+fit1 <- with(imp, lm(sws ~ log10(bw) + odi), print=F)
+# fit1$analyses
+# Pool regression results.
+pool(fit1)
+summary(pool(fit1))
+# We note lambda (ratio of data attributed to missing data) and fmi (gamma; fraction of information missing due to nonresponse) are very high. (Apparently), This is b/c the species variable is part of the predictors. Species is a unique categorical variable for each of the observations. Since it's categorical, it's converted to a dummy variable. Since it's unique, each species is modeled by its own imputation model.
+# LET US DO THE ANALYSIS AGAIN EXCLUDING SPECIES FROM PREDICTORS
+
+```
+## Analysis [Attempt 2]
+```{r}
+# Redo multiple imputation with 5 imputations, 10 iterations with species removed as a predictor.
+impnew <- mice(mammalsleep[ , -1], maxit = 10, print = F)
+complete(impnew)
+# Redo same (multiple linear) regression analysis.
+fit2 <- with(impnew, lm(sws ~ log10(bw) + odi))
+pool(fit2)
+summary(pool(fit2))
+# Note fmi and lambda have drastically decreased, i.e. imputation model has been greatly improved. HOWOEVER.... upon plotting we notice that convergence is a real problem. This is due to how ts = ps + sws. This relation is ignored in imputations. Needs to be taken into account using "passive imputation" (more in next vignette)
+
+plot(impnew)
+
+
+```
+
