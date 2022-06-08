@@ -58,7 +58,7 @@ summary(df_pmm)
 
 # rf simulation
 ```{r}
-num_sim = 10
+num_sim = 100
 df = nhanes
 df_rf <- data.frame(matrix(ncol = 6, nrow = 0))
 
@@ -86,5 +86,42 @@ for (i in 1:num_sim){
 df_rf
 # obtain summary statistics for num_sim simulations.
 summary(df_rf)
+```
+## MAR (Dependence on categorical variable)
+```{r}
+# Creates function that create a dataset with 50 observations for a linear regression model with a categorical variable.  
+create.data <- function(beta = 1, sigma2 = 1, n = 50,
+                        run = 1, categorical_var = "gender" , category_one = "M", category_zero = "F") {
+  set.seed(seed = run)
+  x <- rnorm(n)
+  y <- beta * x + rnorm(n, sd = sqrt(sigma2))
+  # p represents probability of being in some group (E.g. Male = 1 vs Female = 0)
+  z <- rbinom(n, 1, p = 0.5)
+  z[z == 0] <- category_zero
+  z[z == 1] <- category_one
+  
+  cbind(x = x, y = y, categorical_var = z)
+  # sort df by categorical variable.
+  df <- as.data.frame(cbind(x = x, y = y, categorical_var = z)) %>% arrange(categorical_var)
+}
+# Creates function that removes p_0 % of data from category zero, p_1 % of data from category_one. Note this is effectively MCAR within each group (definition of MAR).
+make.missing <- function(data, p_0 = 0.1, p_1 = 0.8 ){
+  # don't generate nrow(data) times, generate count of category times.
+  counts <- count(data, categorical_var)
+  num_cat_zero <-counts[1,2]
+  num_cat_one <- counts[2,2]
+  r_zero <- rbinom(counts[1,2], 1, p_0)
+  r_one <- rbinom(counts[2,2], 1, p_1)
+  data[1:num_cat_zero,1][r_zero == 1] <- "dog"
+  data[(num_cat_zero +1):nrow(data), 1][r_one ==1] <- "cat"
+  data
+}
+# Function that calls mice (applying imputation) and applies Rubin's Rules, and creates 95% confidence intervals for parameter
+test.impute <- function(data, m = 5, method = "norm", ...) {
+  imp <- mice(data, method = method, m = m, print = FALSE, ...)
+  fit <- with(imp, lm(y ~ x))
+  tab <- summary(pool(fit), "all", conf.int = TRUE)
+  as.numeric(tab[2, c("estimate", "2.5 %", "97.5 %")])
+}
 ```
 
