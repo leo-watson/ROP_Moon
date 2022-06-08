@@ -107,7 +107,7 @@ summary(df_norm)
 ```{r}
 # temp, Wind reasonably normal:
 hist(airquality$Temp)
-# Finding true value of B_1 (Q) using complete dataset:
+# Finding true value of B_1 from complete data model (Q-hat) using complete dataset:
 
 df <- as_tibble(airquality[,3]) %>% 
   add_column(airquality[,4]) %>%
