@@ -37,7 +37,7 @@ test.impute <- function(data, m = 5, method = "norm", ...) {
 ## MAR (Dependence on categorical variable)
 ```{r}
 # Creates function that create a dataset with 50 observations for a linear regression model with a categorical variable.  
-create.data.categorical <- function(beta = 1, sigma2 = 1, n = 50,
+MAR.create.data <- function(beta = 1, sigma2 = 1, n = 50,
                         run = 1, categorical_var = "gender" , category_one = "M", category_zero = "F") {
   set.seed(seed = run)
   x <- rnorm(n)
@@ -53,7 +53,7 @@ create.data.categorical <- function(beta = 1, sigma2 = 1, n = 50,
   df <- as.data.frame(data) %>% arrange(categorical_var)
 }
 # Creates function that removes p_0 % of data from category zero, p_1 % of data from category_one. Note this is effectively MCAR within each group (definition of MAR).
-make.missing <- function(data, p_0 = 0.2, p_1 = 0.8 ){
+MAR.make.missing <- function(data, p_0 = 0.2, p_1 = 0.8 ){
   # don't generate nrow(data) times, generate count of category times.
   counts <- count(data, categorical_var)
   num_cat_zero <-counts[1,2]
@@ -65,7 +65,7 @@ make.missing <- function(data, p_0 = 0.2, p_1 = 0.8 ){
   data
 }
 # Function that calls mice (applying imputation) and applies Rubin's Rules, and creates 95% confidence intervals for parameter
-test.impute <- function(data, m = 5, method = "norm", ...) {
+MAR.test.impute <- function(data, m = 5, method = "norm", ... ,threshold =  1.0) {
   imp <- mice(data, method = method, m = m, print = FALSE, ...)
   fit <- with(imp, lm(y ~ x))
   tab <- summary(pool(fit), "all", conf.int = TRUE)
