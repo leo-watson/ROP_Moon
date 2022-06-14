@@ -79,6 +79,7 @@ MAR.test.impute <- function(data, m = 5, method = "norm", ... ,threshold =  1.0)
 
 ```{r}
 data <- MAR.create.data(n=500) %>% MAR.make.missing()
+MAR.test.impute(data)
 data_obs <- data[(complete.cases(data)), ]
 # non-missing values
 # cannot create histogram with type list, so must unlist and convert to numeric.
@@ -98,33 +99,6 @@ hist(nonobserved_y)
 ```
 
 
-```{r}
-#define data frame
-df <- data.frame(x=c(1, 24, NA, 6, NA, 9),
-                 y=c(NA, 3, 4, 8, NA, 12),
-                 z=c(NA, 7, 5, 15, 7, 14))
-
-#view data frame
-df
-# 
-#    x  y  z
-# 1  1 NA NA
-# 2 24  3  7
-# 3 NA  4  5
-# 4  6  8 15
-# 5 NA NA  7
-# 6  9 12 14
-
-#remove rows with NA value in any column data frame
-df <- df[complete.cases(df), ]
-
-#view data frame 
-df
-#    x  y  z
-# 2 24  3  7
-# 4  6  8 15
-# 6  9 12 14
-```
 
 ```{r}
 simulate <- function(runs = 10) {
@@ -133,11 +107,11 @@ simulate <- function(runs = 10) {
                         as.character(1:runs),
                         c("estimate", "2.5 %","97.5 %"))
   for(run in 1:runs) {
-    data <- create.data.categorical(run = run)
-    data <- make.missing(data)
-    res[1, run, ] <- test.impute(data, method = "norm.predict",
+    data <- MAR.create.data(run = run)
+    data <- MAR.make.missing(data)
+    res[1, run, ] <- MAR.test.impute(data, method = "norm.predict",
                                  m = 2)
-    res[2, run, ] <- test.impute(data, method = "norm.nob")
+    res[2, run, ] <- MAR.test.impute(data, method = "norm.nob")
   }
   res
 }
