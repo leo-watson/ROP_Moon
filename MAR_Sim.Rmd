@@ -6,6 +6,7 @@ date: '2022-06-08'
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
 ```
 ## MCAR (Given in Chapter 2.5.)
 ```{r cars}
@@ -36,32 +37,35 @@ test.impute <- function(data, m = 5, method = "norm", ...) {
 
 ## MAR (Dependence on categorical variable)
 ```{r}
-# Creates function that create a dataset with 50 observations for a linear regression model with a categorical variable.  
+# Creates function that create a dataset with 50 observations for a MUTLIPLE linear regression model with a categorical variable.  
 MAR.create.data <- function(beta = 1, sigma2 = 1, n = 50,
-                        run = 1, categorical_var = "gender" , category_one = "M", category_zero = "F") {
+                        run = 1, beta2 = 10, categorical_var = "gender" , category_one = "M", category_zero = "F") {
   set.seed(seed = run)
   x <- rnorm(n)
-  y <- beta * x + rnorm(n, sd = sqrt(sigma2))
   # p represents probability of being in some group (E.g. Male = 1 vs Female = 0)
   z <- rbinom(n, 1, p = 0.5)
+  temp <- cbind(x = x, z = z)
+  # Note the beta2 term for categorical variable effect.
+  y <- beta * x + rnorm(n, sd = sqrt(sigma2)) + beta2 * z
   z[z == 0] <- category_zero
   z[z == 1] <- category_one
   # cat_var = categorical_var
   data <- cbind(x = x, y = y, categorical_var = z)
   # colnames(data) <- c("x", "y", categorical_var)
   # sort df by categorical variable.
-  df <- as.data.frame(data) %>% arrange(categorical_var)
+  df <- as.data.frame(data) %>% 
+    arrange(categorical_var)
 }
 # Creates function that removes p_0 % of data from category zero, p_1 % of data from category_one. Note this is effectively MCAR within each group (definition of MAR).
-MAR.make.missing <- function(data, p_0 = 0.2, p_1 = 0.8 ){
+MAR.make.missing <- function(data, p_0 = 0.3, p_1 = 0.7 ){
   # don't generate nrow(data) times, generate count of category times.
   counts <- count(data, categorical_var)
   num_cat_zero <-counts[1,2]
   num_cat_one <- counts[2,2]
   r_zero <- rbinom(counts[1,2], 1, p_0)
   r_one <- rbinom(counts[2,2], 1, p_1)
-  data[1:num_cat_zero,1][r_zero == 1] <- "NA"
-  data[(num_cat_zero +1):nrow(data), 1][r_one ==1] <- "NA"
+  data[1:num_cat_zero,1][r_zero == 1] <- NA
+  data[(num_cat_zero +1):nrow(data), 1][r_one ==1] <- NA
   data
 }
 # Function that calls mice (applying imputation) and applies Rubin's Rules, and creates 95% confidence intervals for parameter
@@ -74,9 +78,54 @@ MAR.test.impute <- function(data, m = 5, method = "norm", ... ,threshold =  1.0)
 ```
 
 ```{r}
-data <- create.data.categorical(n=50)
-make.missing(data)
+data <- MAR.create.data(n=500) %>% MAR.make.missing()
+data_obs <- data[(complete.cases(data)), ]
+# non-missing values
+# cannot create histogram with type list, so must unlist and convert to numeric.
+observed_y <- as.numeric(unlist(data_obs[2]))
+
+hist(observed_y)
 ```
+
+```{r}
+# Missing Values
+data_mis <- data[is.na(data),]
+# cannot create histogram with type list, so must unlist and convert to numeric.
+nonobserved_y <- as.numeric(unlist(data_mis[2]))
+
+hist(nonobserved_y)
+
+```
+
+
+```{r}
+#define data frame
+df <- data.frame(x=c(1, 24, NA, 6, NA, 9),
+                 y=c(NA, 3, 4, 8, NA, 12),
+                 z=c(NA, 7, 5, 15, 7, 14))
+
+#view data frame
+df
+# 
+#    x  y  z
+# 1  1 NA NA
+# 2 24  3  7
+# 3 NA  4  5
+# 4  6  8 15
+# 5 NA NA  7
+# 6  9 12 14
+
+#remove rows with NA value in any column data frame
+df <- df[complete.cases(df), ]
+
+#view data frame 
+df
+#    x  y  z
+# 2 24  3  7
+# 4  6  8 15
+# 6  9 12 14
+```
+
 ```{r}
 simulate <- function(runs = 10) {
   res <- array(NA, dim = c(2, runs, 3))
