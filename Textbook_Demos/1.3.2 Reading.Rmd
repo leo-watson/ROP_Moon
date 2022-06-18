@@ -5,36 +5,35 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-# My jank way of calculating mean of airquality dataset's not-NA Ozone values 
+library(tidyverse)
+library(lavaan)
+```
+
+```{r}
 head(airquality)
-airquality %>% mean(Wind)
-Ozzy <- airquality %>% 
-  select(Ozone)
-Ozzy %>% summarize(
-  mean(Ozone, na.rm = TRUE))
-# Textbook:
+
 data <- airquality[, c("Ozone", "Solar.R", "Wind")]
-data
 mu <- colMeans(data, na.rm = TRUE)
 mu
 cv <- cov(data, use = "pairwise")
 cv
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
 ```{r cars}
-install.packages("lavaan", dependencies = TRUE)
-library(lavaan)
 fit <- lavaan("Ozone ~ 1 + Wind + Solar.R
               Ozone ~~ Ozone",
              sample.mean = mu, sample.cov = cv,
              sample.nobs = sum(complete.cases(data)))
-fit
+summary(fit)
+```
+```{r}
+# install.packages("lavaan", dependencies = TRUE)
+# library(lavaan)
+fit <- lavaan("Ozone ~ 1 + Wind + Solar.R
+              Ozone ~~ Ozone",
+             sample.mean = mu, sample.cov = cv,
+             sample.nobs = sum(complete.cases(data)))
+summary(fit)
 ```
 
 ## Including Plots
