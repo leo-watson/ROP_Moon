@@ -1,0 +1,29 @@
+---
+title: "listwise_deletion"
+output: html_document
+date: '2022-06-19'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Listwise Deletion (Complete-Case Analysis)
+
+### Description
+* Eliminates all observations containing ANY missing values in variables of interest.
+* ![example from Excel](/Users/leo/Desktop/UofT/ROP/ROP_Moon/Writeup/Images/listwise_deletion.png)
+
+### Pros
+* Highly convenient and computationally cheap.
+* Robust model due to studying purely complete-cases.
+* Unbiased estimates of means, variances, and regression coefficients under MCAR missingness.
+* Can be efficient and exceedingly effective in specific scenarios:
+  +(1): If probability to be missing does not depend on Y (Response). Missing data rate may depend on any predictors X, with missing data in both Y/X.
+  + (2): If complete data model is logistic regression. If missing data is confined to one of Y or X, regression coefficients are unbiased if missingness depends only on Y and not on X.
+
+
+
+### Cons
+* Wasteful, especially in cases where observations are only missing a small fraction of variable values. May be computationally cheap, but wasteful of expensive data.
+* If data isn’t MCAR, severely biased estimates of means, variances, and regression coefficients. 

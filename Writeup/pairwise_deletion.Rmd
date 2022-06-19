@@ -1,0 +1,54 @@
+---
+title: "pairwise_deletion"
+output: html_document
+date: '2022-06-19'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pairwise Deletion
+
+
+### Description
+* Pairwise Deletion seeks to utilize ALL available data 
+* Calculates means of variables using observed data for each variable.
+* Combines this with correlations/correlations between the different variables in the dataset to impute values.
+
+### Example  
+
+Inspect Dataset
+```{r}
+suppressPackageStartupMessages(library(lavaan))
+library(lavaan)
+data <- airquality[, c("Ozone", "Solar.R", "Wind")]
+head(data)
+```
+Compute means for each column using observed values
+```{r}
+mu <- colMeans(data, na.rm = TRUE)
+mu
+```
+Compute covariances for each variable
+```{r}
+cv <- cov(data, use = "pairwise")
+cv
+```
+
+Apply pairwise deletion using the Lavaan package
+```{r cars}
+fit <- lavaan("Ozone ~ 1 + Wind + Solar.R
+              Ozone ~~ Ozone",
+             sample.mean = mu, sample.cov = cv,
+             sample.nobs = sum(complete.cases(data)))
+#summary(fit)
+# Gives coefficients for regression model.
+coef(fit)[c(2:3)]
+```
+
+### Pros
+* If data $(Y, X_1,...,X_n)$ follows multivariate normal distribution, correlations between variables are low, and if MCAR is plausible, provided unbiased estimates effectively and efficiently.
+
+
+### Cons
