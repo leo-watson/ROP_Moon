@@ -1,0 +1,74 @@
+---
+title: "Mean Imputation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# 
+# When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```
+
+# Mean Imputation
+
+### Description
+* For each variable in the dataset, replaces missing values with mean of the observed values.
+* Similar to pairwise deletion but without any correlation/covariance calculations.
+
+### Example
+```{r pressure, echo=FALSE, cache=FALSE, results=FALSE, warning=FALSE, comment=FALSE, warning=FALSE} 
+suppressPackageStartupMessages(library(tidyverse))
+library(tidyverse)
+```
+Get a sense of data of interest (note missingness) using head() function to show first few rows.
+```{r}
+head(airquality, n =10) %>% select(Ozone)
+
+```
+Compute mean of (observed) Ozone values.
+```{r}
+mean_ozone <- mean(airquality$Ozone, na.rm = TRUE)
+mean_ozone
+```
+Create histogram of observed values.   
+```{r warning=FALSE}
+ggplot(data = airquality, aes(x = Ozone)) + 
+  geom_histogram(color = "black",
+                 fill = "gray",
+                 bins = 30) + 
+  labs(x = "Ozone values (ppb)")
+
+```
+   
+Impute missing values and create histogram of complete dataset.
+```{r}
+imputed <- data.frame(airquality$Ozone)
+imputed[is.na(imputed)] <- mean(airquality$Ozone, na.rm = TRUE)
+ggplot(data = imputed, aes(x = airquality.Ozone)) + 
+  geom_histogram(color = "black",
+                 fill = "gray",
+                 bins = 30) + 
+  labs(x = "Ozone values (ppb)")
+```
+  
+  Note that the imputed values all equal the mean 42.129 ppb, hence the large peak in the above histogram at that value. The distribution is now bimodal and the standard deviation has decreased from ~33.0 to ~28.7 as shown below.
+```{r}
+sd(airquality$Ozone, na.rm = TRUE)
+sd(imputed$airquality.Ozone)
+```
+
+
+### Pros
+* Conceptually straightforward. 
+* Computationally inexpensive.
+
+
+### Cons
+* Can heavily distort distribution (e.g. unimodal distribution becomes bimodal like in example above)
+* Underestimates the variance due to imputed values having zero contribution to variance.
+* Biases almost all estimators irrespective of missing data mechanism.
+* Even biases the mean estimator $\bar{X}$ if not MCAR. 
+
+
