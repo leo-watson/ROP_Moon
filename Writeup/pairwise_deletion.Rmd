@@ -16,39 +16,56 @@ knitr::opts_chunk$set(echo = TRUE)
 * Calculates means of variables using observed data for each variable.
 * Combines this with correlations/correlations between the different variables in the dataset to impute values.
 
-### Example  
+#### Example  
 
-Inspect Dataset
+* Inspect Dataset
 ```{r}
 suppressPackageStartupMessages(library(lavaan))
 library(lavaan)
 data <- airquality[, c("Ozone", "Solar.R", "Wind")]
 head(data)
 ```
-Compute means for each column using observed values
+* Compute means for each column using observed values
 ```{r}
 mu <- colMeans(data, na.rm = TRUE)
 mu
 ```
-Compute covariances for each variable
+* Compute covariances for each variable
 ```{r}
 cv <- cov(data, use = "pairwise")
 cv
 ```
 
-Apply pairwise deletion using the Lavaan package
+Apply pairwise deletion using the Lavaan package to obtain coefficients for Ozone w.r.t Wind, Solar.R in regression model.
 ```{r cars}
 fit <- lavaan("Ozone ~ 1 + Wind + Solar.R
               Ozone ~~ Ozone",
              sample.mean = mu, sample.cov = cv,
              sample.nobs = sum(complete.cases(data)))
-#summary(fit)
-# Gives coefficients for regression model.
 coef(fit)[c(2:3)]
 ```
 
 ### Pros
-* If data $(Y, X_1,...,X_n)$ follows multivariate normal distribution, correlations between variables are low, and if MCAR is plausible, provided unbiased estimates effectively and efficiently.
+* Pairwise deletion works well if data $(Y, X_1,...,X_n)$ approximately follows a multivariate normal distribution and the correlations between variables are low.
+* If MCAR is plausible, provides unbiased estimates effectively and efficiently.
 
 
-### Cons
+### Cons  
+* Requires MCAR assumption for unbiased estimates.
+* Correlation matrix obtained via pairwise deletion may give mathematically impossible results, and hence unable to perform regression analysis [see code below]
+  + Consider 4x3 data frame with some missingness
+```{r}
+df <- data.frame(X1 = c(3,NA,2,4),
+                 X2 = c(4,1,2,NA),
+                 X3 = c(4,1,NA,3))
+df
+```
+
+  + Create correlation matrix. Note that $X_1, X_2$ are perfectly correlated, $X_2, X_3$ are perfectly correlated and YET $X_1, X_3$ are perfectly negatively correlated. This is a physically impossible scenario.
+```{r}
+cor(df, use=  "pairwise.complete.obs")
+```
+
+* Covariance/Correlation matrix may not be positive definite (requirement for multivariable procedures and further analysis, e.g. MANOVA [multivariate analysis of variance]) 
+* Sample size will almost certainly vary between variables due to missingness. This is problematic for calculating standard errors as the $n$ value is ambiguous and hence either underestimated or overestimated.
+

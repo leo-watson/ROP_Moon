@@ -127,8 +127,12 @@ test.impute <- function(data, m = 5, method = "norm", ...) {
 
 
 ```{r}
-data <- MAR.create.data(n =50)
-data_num <- as.data.frame(apply(data[,c(1:2)], 2, as.numeric))
 
+```
+
+```{r}
+typeof(data[1,1])
+
+typeof(data_num_complete[1,1])
 ```
 

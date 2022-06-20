@@ -35,7 +35,7 @@ library(tidyverse)
 
 # Create tibble w/ 2 column vectors.
 data <- airquality[, c("Ozone", "Solar.R")]
-# Applies regression imputation to Ozone w.r.t Solar.R
+# Applies regression imputation to Ozone w.r.t Solar.R. Note that applying regression imputation using mice() will give imputations even when BOTH Ozone and Solar.R are missing. This is b/c mice() works by first imputing tenative estimates that are THEN iteratively imputed. In this case, since there's no further information for iteration in cases where both variable values are missing, the initial imputation [mean in this case] is kept.
 imp <- mice(data, method = "norm.predict", seed = 1,
            m = 1, print = FALSE)
 complete(imp)

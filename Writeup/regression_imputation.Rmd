@@ -1,0 +1,56 @@
+---
+title: "regression_imputation"
+output: html_document
+date: '2022-06-20'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
+library(mice)
+library(tidyverse)
+```
+
+# (Deterministic) Regression Imputation
+
+
+### Description
+* Fits a regression model between observed values of predictor variables $(X_1, ..., X_n)$ and response variable $Y$.
+* Imputes NA values with the exact predicted values from regression model.
+
+#### Example
+```{r cars}
+
+
+# Fit linear regression to Ozone w.r.t Solar.R
+fit <- lm(Ozone ~ Solar.R, data = airquality)
+fit
+# Applies fit to data.
+pred <- predict(fit, data)
+pred
+pred_df <- as.data.frame(pred)
+pred_df
+```
+
+```{r}
+rownames(pred_df)
+pred_df[]
+```
+```{r}
+airquality_processed <- airquality %>% select(Ozone, Solar.R) %>%
+  mutate(model_ozone = pred_df$pred) %>% mutate(combined_ozone = if_else(is.na(Ozone), model_ozone, as.numeric(Ozone), missing = NULL))
+airquality_processed
+```
+
+
+
+
+### Pros
+* Yields unbiased mean estimates under MCAR, and regression weights of imputation model if the explanatory variables are complete.
+* Yields unbiased estimators for regression weights under MAR, if the variable causing the MAR is part of the regression model. (e.g. if Solar.R was responsible for missingness in Ozone)
+
+
+### Cons
+* Since imputed values are the exact predicted values from the regression model, correlation is overestimated and variability is underestimaed
+* Imputations are realistic if predicted linear model is almost perfect, but deterministic regression often too precise and too good to be true; spurious relations and false positives abound. 
