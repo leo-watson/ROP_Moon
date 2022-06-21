@@ -20,27 +20,43 @@ library(tidyverse)
 * Imputes NA values with the exact predicted values from regression model.
 
 #### Example
-```{r cars}
-
-
-# Fit linear regression to Ozone w.r.t Solar.R
+```{r}
+# Fit linear regression model to Ozone w.r.t Solar.R from airquality built-in dataset.
 fit <- lm(Ozone ~ Solar.R, data = airquality)
-fit
-# Applies fit to data.
-pred <- predict(fit, data)
-pred
+# Applies fit to dataset.
+pred <- predict(fit, airquality %>% select(Ozone, Solar.R))
 pred_df <- as.data.frame(pred)
-pred_df
-```
 
+```
+ 
 ```{r}
-rownames(pred_df)
-pred_df[]
+# Create new variable "model_ozone" that takes exact value given the fitted model, and new variable "combined_ozone" that takes observed "Ozone" value if it's not missing, "model_ozone" value if missing.
+airquality_processed <- airquality %>% 
+  select(Ozone, Solar.R) %>%
+  mutate(model_ozone = pred_df$pred) %>%
+  mutate(combined_ozone = if_else(is.na(Ozone), model_ozone, as.numeric(Ozone), missing = NULL)) %>% mutate(combined_ozone_type = if_else(is.na(Ozone), "imputed", "observed", missing = NULL)) %>% relocate(Solar.R, .after = combined_ozone) %>% relocate(combined_ozone)
+head(airquality_processed, n = 25)
+```
+* Note the imputed values in the scatter plot below are exactly the predicted values from the regression fit with no added randomness. This increases the correlation and decreases variance, as shown in the next chunks. 
+```{r warning = FALSE}
+airquality_processed %>% 
+  ggplot(aes(x = Solar.R,y= combined_ozone, color = combined_ozone_type)) + 
+  geom_point() + 
+  labs(y = "ozone  (ppb)",
+       x = "Solar Radiation")
 ```
 ```{r}
-airquality_processed <- airquality %>% select(Ozone, Solar.R) %>%
-  mutate(model_ozone = pred_df$pred) %>% mutate(combined_ozone = if_else(is.na(Ozone), model_ozone, as.numeric(Ozone), missing = NULL))
-airquality_processed
+# Correlation for observed values
+cor.test(airquality_processed$Ozone, airquality_processed$Solar.R)$estimate
+# Correlation for observed/imputed values 
+cor.test(airquality_processed$combined_ozone, airquality_processed$Solar.R)$estimate
+```
+```{r}
+# Variance for observed values
+var(airquality_processed$Ozone, airquality_processed$Solar.R, na.rm = TRUE)
+# Variance for observed/imputed values
+var(airquality_processed$combined_ozone, airquality_processed$Solar.R, na.rm = TRUE)
+
 ```
 
 
