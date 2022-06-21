@@ -58,19 +58,73 @@ MAR.test.impute <- function(data, m = 5, method = "norm", ... ,threshold =  1.0)
 }
 ```
 
+```{r}
+data <- MAR.create.data(n =50) %>% MAR.make.missing()
+data %>% MAR.test.impute()
+
+```
+
 
 ```{r}
-# Must convert observation values to double from character in order for mice() to work. Add check to MAR.test.impute() that converts first two columns (numerical vars) to double.
+
+# Must convert observation values to double from character in order for mice() to work. Add check # to MAR.test.impute() that converts first two columns (numerical vars) to double.
 data <- MAR.create.data(n =50) %>% MAR.make.missing()
-data_num <- as.data.frame(apply(data[,c(1:2)], 2, as.numeric))
+# Applying MAR.test.impute() manually for debugging purposes.
+data_num <- as.data.frame(apply(data %>% select(x,y), 2, as.numeric))
 data_num_complete <- data_num
-data_num_complete$categorical_var <- data[,3]
-cor(data_num_complete[,1], data_num_complete[,2])
+data_num_complete$categorical_var <- (data$categorical_var)
 imp <- mice(data_num_complete)
 fit <- with(imp, lm(y ~ x))
 tab <- summary(pool(fit), "all", conf.int = TRUE)
 as.numeric(tab[2, c("estimate", "2.5 %", "97.5 %")])
-complete(imp)
+
+# Gives us information regarding the logged event warning.
+imp$loggedEvents
+
+```
+
+
+
+```{r}
+simulate <- function(runs = 10) {
+  res <- array(NA, dim = c(2, runs, 3))
+  dimnames(res) <- list(c("norm.predict", "norm.nob"),
+                        as.character(1:runs),
+                        c("estimate", "2.5 %","97.5 %"))
+  for(run in 1:runs) {
+    data <- MAR.create.data(run = run)
+    data <- MAR.make.missing(data)
+    res[1, run, ] <- MAR.test.impute(data, method = "norm.predict",
+                                 m = 2)
+    res[2, run, ] <- MAR.test.impute(data, method = "norm.nob")
+  }
+  res
+}
+```
+
+```{r}
+# Run the simulation and store in res
+res <- simulate(100)
+
+```
+```{r}
+apply(res, c(1, 3), mean, na.rm = TRUE)
+
+```
+```{r}
+true <- 1
+RB <- rowMeans(res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
+AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+```
+
+```{r}
+head(imp$loggedEvents, 1)
+
+
 ```
 
 ## Analysis of response variable for observed X
