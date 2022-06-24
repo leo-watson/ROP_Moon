@@ -1,0 +1,44 @@
+---
+title: "LOCF_BOCF"
+output: html_document
+date: '2022-06-21'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+# LOCF (longitudinal data imputation)
+
+### Description
+LOCF (Last Observation Carried Forward) is a way of imputing longitudinal data.
+
+#### Example
+```{r}
+airquality_filled <- tidyr::fill(airquality, Ozone)
+airquality_filled %>% ggplot(aes(x = Day,y= Ozone)) + 
+  geom_point() + 
+  labs(y = "ozone  (ppb)",
+       x = "Day Number")
+```
+
+```{r}
+airquality_indicator <- airquality %>% 
+  mutate(imputation_indicator = if_else(is.na(Ozone), "imputed", "observed"))
+
+airquality2 <- tidyr::fill(airquality_indicator, Ozone)
+head(airquality2, 30) %>% ggplot(aes(x = Day,y= Ozone, color = imputation_indicator)) + 
+  geom_line() + 
+  geom_point() + 
+  labs(y = "ozone  (ppb)",
+       x = "Day Number")
+```
+
+### Pros
+
+
+
+### Cons
+

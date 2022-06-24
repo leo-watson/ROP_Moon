@@ -6,17 +6,42 @@ date: '2022-06-20'
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
 
+```
+# Stochastic Regression Imputation
 
 ### Description
-* Very similar to deterministic regression imputation but as an extra step adds noise to predictions to account for the uncertainty in imputation.
+* Very similar to deterministic regression imputation but as an extra step adds noise (random draw from residual) to predictions to account for the uncertainty in imputation.
 
+#### Example
+```{r}
+# remove rows with no information, add indicator variable for whether a row requires imputation or not.
+data <- airquality[, c("Ozone", "Solar.R")]  %>% 
+  filter(!is.na(Ozone) | !is.na(Solar.R)) %>% 
+  mutate(imputed_or_not = if_else(is.na(Ozone) | is.na(Solar.R) , "imputed", "observed"))
+
+# "method = norm.nob" applies imputation to "data" (w/o indicator) using stochastic regression. The other parameters in mice() aren't relevant for this section. 
+imp <- mice(data %>% select(Ozone, Solar.R), method = "norm.nob", m = 1, maxit = 1, seed = 1, print = FALSE)
+imputed_airquality_dataset <- complete(imp) %>% add_column(data$imputed_or_not) %>% rename(imputation_indicator = "data$imputed_or_not")
+```
+```{r}
+imputed_airquality_dataset %>% 
+  ggplot(aes(x = Solar.R,y= Ozone, color = imputation_indicator)) + 
+  geom_point() + 
+  labs(y = "ozone  (ppb)",
+       x = "Solar Radiation")
+```
+  
+#### Recall the deterministic regression imputation plot and note the random noise added to imputed values above: 
+![](images/deterministic_regression_imp.png)
 
 ### Pros
 * Unlike deterministic regression imputation, preserves correlation between variables.
+* Initially counterintuitive to add random noise to our perfectly adequate prediction model, but this is in fact ideal for having the imputed values mimic the uncertainity in the unknown values. 
 
 
 ### Cons
-* Can lead to negative values [negative ozone, as shown LHS], which adds additional complexity b/c implausible.
-* This model assumes equal dispersion of data for the entire linear model. Hence, not accurate for heteroscedastic (non-costant variance) distributions.
+* Can lead to extreme values such as negative values [e.g. negative ozone shown in example above], which are impossible in real-world. 
+* This model assumes equal dispersion of data for the entire linear model. Hence, not accurate for heteroscedastic (non-costant variance) distributions. In the example above, observed dispersion is more extreme in the 200~300Ly Solar.R band, but imputed values do not acocunt for this and follow same degree of dispersion throughout.
