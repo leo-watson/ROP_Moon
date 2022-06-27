@@ -1,5 +1,5 @@
 ---
-title: "LOCF_BOCF"
+title: "LOCF"
 output: html_document
 date: '2022-06-21'
 ---
@@ -13,8 +13,9 @@ suppressPackageStartupMessages(library(tidyverse))
 # LOCF (longitudinal data imputation)
 
 ### Description
-LOCF (Last Observation Carried Forward) is a way of imputing longitudinal data.
-
+* LOCF (Last Observation Carried Forward) is a way of imputing longitudinal data.
+* It imputes missing values by replacing them with the latest observed value. Typically seen in clinical trials
+  
 #### Example
 ```{r}
 airquality_filled <- tidyr::fill(airquality, Ozone)
@@ -38,7 +39,12 @@ head(airquality2, 30) %>% ggplot(aes(x = Day,y= Ozone, color = imputation_indica
 
 ### Pros
 
+* Conceptually very simple to generate a complete dataset.
+* Computationally cheap relative to other techniques that may be more statistically sound (e.g. multiple imputation).
 
 
 ### Cons
+* Should only be applied when we are confident in cases where we are certain what the missing values should be.
+* Can yield biased estimators even under MCAR 
+
 

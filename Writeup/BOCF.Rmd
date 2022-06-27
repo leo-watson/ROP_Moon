@@ -1,29 +1,49 @@
 ---
 title: "BOCF"
 output: html_document
-date: '2022-06-24'
+date: '2022-06-21'
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
 ```
 
-## R Markdown
+# BOCF (longitudinal data imputation)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+### Description
+* BOCF (Base Observation Carried Forward) is a way of imputing longitudinal data.
+* As per its name suggests, BOCF imputes missing values by replacing them with some predetermined baseline value. Typically used in clinical trials where a "baseline value" can easily be established. 
+  
+#### Example
+```{r}
+airquality_filled <- tidyr::fill(airquality, Ozone)
+airquality_filled %>% ggplot(aes(x = Day,y= Ozone)) + 
+  geom_point() + 
+  labs(y = "ozone  (ppb)",
+       x = "Day Number")
 ```
 
-## Including Plots
+```{r}
+airquality_indicator <- airquality %>% 
+  mutate(imputation_indicator = if_else(is.na(Ozone), "imputed", "observed"))
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+airquality2 <- tidyr::fill(airquality_indicator, Ozone)
+head(airquality2, 30) %>% ggplot(aes(x = Day,y= Ozone, color = imputation_indicator)) + 
+  geom_line() + 
+  geom_point() + 
+  labs(y = "ozone  (ppb)",
+       x = "Day Number")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Pros
+
+* Conceptually very simple in generating a complete dataset.
+* Computationally cheap relative to other techniques that may be more statistically sound (e.g. multiple imputation).
+
+
+### Cons
+* Should only be applied when we are confident in cases where we are certain what the missing values should be.
+* Can yield biased estimators even under MCAR 
+* Panel on Handling Missing Data in Clinical Trials recommends BOCF shouldn't be used unless under very specific circumstances where BOCF assumptions are justified.

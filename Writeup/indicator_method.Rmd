@@ -1,5 +1,5 @@
 ---
-title: "indicator_method"
+title: "missing_indicator_method"
 output: html_document
 date: '2022-06-21'
 ---
@@ -7,3 +7,36 @@ date: '2022-06-21'
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+# Missing Indicator Method
+
+
+### Description
+
+* Imputation technique applicable when explanatory variable(s) have missingness but response does not.
+* Missing values are replaced by a fixed value (usually 0 or observed values’ mean), and a missingness indicator variable is added to each observation in the dataset for each incomplete variable.
+
+#### Example
+```{r}
+airquality
+```
+
+```{r}
+# Impute the airquality dataset, using observed mean as the fixed imputation value.
+imp <- mice(airquality, method = "mean", m = 1,
+            maxit = 1, print = FALSE)
+# add column to airquality dataset indicating whether Ozone value is missing or not.
+airquality2 <- cbind(complete(imp),
+                     r.Ozone = is.na(airquality[, "Ozone"]))
+# apply multiple linear regression
+fit <- lm(Wind ~ Ozone + r.Ozone, data = airquality2)
+```
+### Pros
+* In randomized trials, can be used to generate unbiased estimators in MCAR and MAR covariate situations.
+* Retains the whole observed dataset.
+
+
+### Cons
+* In nonrandomized studies (e.g. observational studies), this method can result in biased estimators and associations between variables even in MCAR situations. 
+* Does not allow for missingness in response variable.
+
+
