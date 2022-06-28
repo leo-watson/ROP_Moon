@@ -6,6 +6,8 @@ date: '2022-06-21'
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
 ```
 # Missing Indicator Method
 
@@ -16,10 +18,13 @@ knitr::opts_chunk$set(echo = TRUE)
 * Missing values are replaced by a fixed value (usually 0 or observed values’ mean), and a missingness indicator variable is added to each observation in the dataset for each incomplete variable.
 
 #### Example
+  * Initial unaltered dataset. Note the 6 variables.
 ```{r}
-airquality
-```
 
+head(airquality)
+```
+   
+* Note how airquality2 now has 7 variables with the addition of the Ozone indicator.
 ```{r}
 # Impute the airquality dataset, using observed mean as the fixed imputation value.
 imp <- mice(airquality, method = "mean", m = 1,
@@ -29,7 +34,12 @@ airquality2 <- cbind(complete(imp),
                      r.Ozone = is.na(airquality[, "Ozone"]))
 # apply multiple linear regression
 fit <- lm(Wind ~ Ozone + r.Ozone, data = airquality2)
+
+head(airquality2)
 ```
+
+
+
 ### Pros
 * In randomized trials, can be used to generate unbiased estimators in MCAR and MAR covariate situations.
 * Retains the whole observed dataset.

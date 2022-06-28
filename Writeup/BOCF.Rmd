@@ -8,6 +8,8 @@ date: '2022-06-21'
 knitr::opts_chunk$set(echo = TRUE)
 suppressPackageStartupMessages(library(mice))
 suppressPackageStartupMessages(library(tidyverse))
+
+airquality_indicator
 ```
 
 # BOCF (longitudinal data imputation)
@@ -18,21 +20,23 @@ suppressPackageStartupMessages(library(tidyverse))
   
 #### Example
 ```{r}
-airquality_filled <- tidyr::fill(airquality, Ozone)
-airquality_filled %>% ggplot(aes(x = Day,y= Ozone)) + 
-  geom_point() + 
-  labs(y = "ozone  (ppb)",
-       x = "Day Number")
+# Store baseline (first observation) of relevant variable [Ozone in this case] 
+baseline_Ozone = (airquality$Ozone)[1]
+
+# Impute missing values with baseline observation as well as adding ozone missingness indicator variable.
+airquality_LOCF <- airquality %>% 
+  mutate(imputation_indicator = if_else(is.na(Ozone), "imputed", "observed")) %>% 
+  replace_na(list(Ozone = baseline_Ozone, Solar.R = baseline_Solar.R))
+
+
 ```
-
+  
+* Notice in BOCF imputed values are equal to the baseline value observed on Day 1
 ```{r}
-airquality_indicator <- airquality %>% 
-  mutate(imputation_indicator = if_else(is.na(Ozone), "imputed", "observed"))
-
-airquality2 <- tidyr::fill(airquality_indicator, Ozone)
-head(airquality2, 30) %>% ggplot(aes(x = Day,y= Ozone, color = imputation_indicator)) + 
+# Create line graph of ozone vs day for the first 30 observations, where imputed values are highlighted using red.
+head(airquality_LOCF, 30) %>% ggplot(aes(x = Day,y= Ozone)) + 
   geom_line() + 
-  geom_point() + 
+  geom_point( aes(color = imputation_indicator)) + 
   labs(y = "ozone  (ppb)",
        x = "Day Number")
 ```

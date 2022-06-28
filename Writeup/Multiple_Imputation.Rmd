@@ -1,0 +1,74 @@
+---
+title: "Multiple Imputation"
+output: html_document
+date: '2022-06-28'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
+
+```
+# Multiple Imputation
+
+
+## Description:
+  
+*(Imputing one value for a missing datum cannot be correct in general, because we don’t know what value to impute with certainty (if we did, it wouldn’t be missing)— Donald B. Rubin)*
+  
+1. Imputation method for multivariate data that takes an incomplete dataset as input and creates multiple copies of the observed data.
+  
+2. Then, impute incomplete columns with plausible values given other columns through an iterative predictive method (methods include predictive mean matching, random forests, mean imputation, etc.)
+    + Iterative methods are used until imputed values converge (typically 5-10 iterations is sufficient)  
+  
+3. Next, obtain an estimate for the parameter of interest for each version of the imputed dataset.
+    + This is done using regular analysis techniques similar to the other imputation procedures.
+  
+4.Finally, pool estimators together to create a single pooled estimate. 
+
+* Naively can visualize multiple imputation as applying stochastic regression imputation multiple times and summarizing results.  
+
+* Number of imputations should be equal to %-age of missingness as a rule of thumb.
+  
+* Note that multiple imputation has serious depth to it for (changing predictor matrix, passive imputation, etc.) that I will not be discussing here. See here for detailed explanation.
+
+```{r, out.width="50%", fig.align = "center"}
+# multiple imputation schematic
+knitr::include_graphics("images/multiple_imputation.png")
+```
+#### Example
+* The mice() function applies multiple imputation. The m parameter refers to the # of datasets we want to create, i.e. the # of circles in the 2nd and 3rd steps of the schematic above.
+```{r}
+# [step 1 above]
+incomplete_data <- airquality
+# [Step 2 above] Apply multiple imputation to airquality to create m = 20 datasets 
+imp <- mice(incomplete_data, seed = 1, m = 20, print = FALSE)
+# [step 3 above] Fits multiple linear regression model to predict Ozone using Wind, Temp, Solar.R as predictor vars
+fit <- with(imp, lm(Ozone ~ Wind + Temp + Solar.R))
+# [step 4 above] pools the twenty datasets' estimated parameters [B_0, B_1, B_2, B_3] to obtain a single pooled set of parameters
+summary(pool(fit))
+```
+```{r,out.width = "50%", fig.align = "center"}
+# scatter plot for complete dataset of first imputation
+knitr::include_graphics("images/mi_first_imp.png")
+
+```
+  
+
+### Pros:
+* Gives unbiased and confidence-valid estimators under MAR, MCAR.  
+
+* Highly versatile and general technique. Can accommodate situations where we have low (high) confidence in missing values by having a large (small) number of imputed dataset copies m.  
+
+* Produces a suitable standard error value (listwise deletion produces too large standard error, other techniques produce too small standard error) close to true value. 
+
+### Cons:
+
+* Ad-hoc methods specified above may work better & faster in edge cases. For example, listwise deletion is equivalent and faster than multiple imputation if missing values occur only in the outcome.
+  + This is because if missingness is only in the outcome, then missing data model is the same as the prediction model as no predictors are imputed. Hence, multiple imputation will simply perform complete-case analysis in a roundabout way.
+   
+* Multiple imputation has multiple parameters that can be varied (# of imputations m, # of iterations maxit, predictor matrix, imputation method, etc.) and so can be hard to work with & optimize for given situation.
+  
+* Doesn’t create unbiased estimators under MNAR.
+

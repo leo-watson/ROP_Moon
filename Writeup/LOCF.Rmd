@@ -17,22 +17,19 @@ suppressPackageStartupMessages(library(tidyverse))
 * It imputes missing values by replacing them with the latest observed value. Typically seen in clinical trials
   
 #### Example
-```{r}
-airquality_filled <- tidyr::fill(airquality, Ozone)
-airquality_filled %>% ggplot(aes(x = Day,y= Ozone)) + 
-  geom_point() + 
-  labs(y = "ozone  (ppb)",
-       x = "Day Number")
-```
+
 
 ```{r}
+# add a missingness indicator for the Ozone variable using the airquality dataset. 
 airquality_indicator <- airquality %>% 
   mutate(imputation_indicator = if_else(is.na(Ozone), "imputed", "observed"))
 
+# Using the tidyr package, impute Ozone NA values with the previous observed value
 airquality2 <- tidyr::fill(airquality_indicator, Ozone)
-head(airquality2, 30) %>% ggplot(aes(x = Day,y= Ozone, color = imputation_indicator)) + 
+# plot a line graph using the first 30 observations in the dataset. Notice imputed values have the same value as the previous observed value under LOCF. 
+head(airquality2, 30) %>% ggplot(aes(x = Day,y= Ozone, )) + 
   geom_line() + 
-  geom_point() + 
+  geom_point(aes(color = imputation_indicator)) + 
   labs(y = "ozone  (ppb)",
        x = "Day Number")
 ```
