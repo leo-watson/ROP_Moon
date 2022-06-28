@@ -11,7 +11,7 @@
 
 
 
-<title>Missing Data Mechanisms &amp; ImputationMethods</title>
+<title>Missing Data Mechanisms &amp; Imputation Methods</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -357,8 +357,8 @@ pre code {
 
 
 
-<h1 class="title toc-ignore">Missing Data Mechanisms &amp;
-ImputationMethods</h1>
+<h1 class="title toc-ignore">Missing Data Mechanisms &amp; Imputation
+Methods</h1>
 <h4 class="date">2022-06-28, Leo Murao Watson</h4>
 
 </div>
@@ -416,12 +416,13 @@ joined on time had a missing submission for the first problem set, while
 <div id="mnar" class="section level2">
 <h2>MNAR</h2>
 <ul>
-<li>We are in a MNAR missing data mechanism scenario when the
+<li><p>We are in a MNAR missing data mechanism scenario when the
 missingness is dependent on some reason unknown to us. In this case,
-probability of missingness is dependent on true value of data point.
-*Mathematically: <span class="math inline">\(P(R_i|Y_i)
+probability of missingness is dependent on true value of data
+point.</p></li>
+<li><p>Mathematically: <span class="math inline">\(P(R_i|Y_i) \neq
 P(R_i|Y_{i,o})\)</span> [probability of missingness doesn’t depend on
-observe data; it depends on unobserved data!]</li>
+observe data; it depends on unobserved data!]</p></li>
 </ul>
 <div id="example-2" class="section level4">
 <h4>Example:</h4>

@@ -1,5 +1,5 @@
 ---
-title: "Missing Data Mechanisms & ImputationMethods"
+title: "Missing Data Mechanisms & Imputation Methods"
 output: html_document
 date: '2022-06-28, Leo Murao Watson'
 ---
@@ -37,7 +37,8 @@ In this write-up, I will discuss the missing data mechanisms of MCAR, MAR, MNAR 
 
 ## MNAR
 * We are in a MNAR missing data mechanism scenario when the missingness is dependent on some reason unknown to us. In this case, probability of missingness is dependent on true value of data point.
-*Mathematically: $P(R_i|Y_i)  P(R_i|Y_{i,o})$ [probability of missingness doesn’t depend on observe data; it depends on unobserved data!]
+
+* Mathematically: $P(R_i|Y_i) \neq P(R_i|Y_{i,o})$ [probability of missingness doesn’t depend on observe data; it depends on unobserved data!]
 
 
 #### Example: 
