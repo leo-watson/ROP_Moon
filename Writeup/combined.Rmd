@@ -1,7 +1,9 @@
 ---
 title: "Missing Data Mechanisms & Imputation Methods"
-output: html_document
-date: '2022-06-28, Leo Murao Watson'
+output:
+  pdf_document: default
+  html_document: default
+date: "2022-06-28, Leo Murao Watson"
 ---
 
 ```{r setup, include=FALSE}
@@ -12,14 +14,17 @@ suppressPackageStartupMessages(library(lavaan))
 
 ```
 # Introduction
-In this write-up, I will discuss the missing data mechanisms of MCAR, MAR, MNAR as well as the imputation methods of listwise deletion, pairwise deletion, mean imputation, stochastic/deterministic regreesion imputation, LOCF/BOCF, the indicator method, and multiple imputation. 
+In this write-up, I will discuss the missing data mechanisms of MCAR, MAR, MNAR as well as the imputation methods of listwise deletion, pairwise deletion, mean imputation, stochastic/deterministic regression imputation, LOCF/BOCF, the missingness indicator method, and multiple imputation. 
+
+\pagebreak
+
 
 # Missing Data Mechanisms  
 
 ## MCAR
-* We are in a MCAR missing data mechanism scenario when missingness is some constant that’s the same for all data points.  
+* We are in a MCAR missing data mechanism scenario when missingness is some constant that’s the same for all data points in a dataset.  
 
-* Mathematically: $P(R_i|Y_i)=P(R_i) = 𝜙$, where $Y_i$ is the i-th data point in our dataset $Y$, $R_i$ is an indicator for missingness ($R_i$ = 0 if not missing, $R_i = 1 if missing), $𝜙$ is some parameter of the missing data model.  
+* Mathematically: $P(R_i|Y_i)=P(R_i) = \phi$, where $Y_i$ is the i-th data point in our dataset $Y$, $R_i$ is an indicator for missingness ($R_i$ = 0 if not missing, $R_i$ = 1 if missing), $\phi$ is some parameter of the missing data model.  
 
 #### Example:    
 * Each student’s mark is stored in a spreadsheet by the instructor but following a computer update 10% of the data is deleted at random.  
@@ -28,17 +33,18 @@ In this write-up, I will discuss the missing data mechanisms of MCAR, MAR, MNAR 
 ## MAR
 * We are in a MAR scenario when missingness is dependent on some observed variable of the data. In this case, the probability of missingness is dependent on groups defined by the data.  
 
-* Mathematically: $P(R_i|Y_i) = P(R_i|Y_{i,o})$   
+* Mathematically: $P(R_i|Y_i) = P(R_i|Y_{i,o})$, i..e probability of missingness for the $Y_i$ observation is dependent on some characteristic of the observed data.   
 
 #### Example  
 * Most students joined a class from day 1, but some students joined late from the waitlist due to capacity restrictions. 10% of students who joined on time had a missing submission for the first problem set, while 30% of students who joined late missed the first problem set.
+  + Mathematically, can think of each student as an observation and whether they joined from the waitlist or not as an observed variable that determines missingness probability. 
 
 
 
 ## MNAR
-* We are in a MNAR missing data mechanism scenario when the missingness is dependent on some reason unknown to us. In this case, probability of missingness is dependent on true value of data point.
+* We are in a MNAR mechanism scenario when the missingness is dependent on some reason unknown to us. In this case, the probability of missingness is dependent on the true value of the data point.
 
-* Mathematically: $P(R_i|Y_i) \neq P(R_i|Y_{i,o})$ [probability of missingness doesn’t depend on observe data; it depends on unobserved data!]
+* Mathematically: $P(R_i|Y_i) \neq P(R_i|Y_{i,o})$ [probability of missingness doesn’t depend on observed data; it depends on unobserved data which we don't know!]
 
 
 #### Example: 
@@ -46,10 +52,12 @@ In this write-up, I will discuss the missing data mechanisms of MCAR, MAR, MNAR 
     + If a student’s true mark is an A, they are 90% likely to state their true mark. 
     + If a student’s true mark is a B, they are 70% likely to state their true mark.
     + If a student’s true mark is a C, they are 50% likely to state their true mark.
+ 
+\pagebreak
 
+# Imputation Methods
 
-
-# Listwise Deletion (Complete-Case Analysis)
+## Listwise Deletion (Complete-Case Analysis)
 
 ### Description
 * Eliminates all observations containing ANY missing values in variables of interest.
@@ -63,48 +71,52 @@ In this write-up, I will discuss the missing data mechanisms of MCAR, MAR, MNAR 
 * Robust model due to studying purely complete-cases.
 * Unbiased estimates of means, variances, and regression coefficients under MCAR missingness.
 * Can be efficient and exceedingly effective in specific scenarios:
-    + (1): If probability to be missing does not depend on Y (Response). Missing data rate may depend on any predictors X, with missing data in both Y/X.
-    + (2): If complete data model is logistic regression. If missing data is confined to one of Y or X, regression coefficients are unbiased if missingness depends only on Y and not on X.
+    + (1): If probability to be missing does not depend on response $Y$. Missing data rate may depend on any predictors $X_i$, with missing data in both Y/X allowed.
+    + (2): If complete data model is logistic regression. If missing data is confined to one of $Y$ or $X_i$, regression coefficients are unbiased if missingness depends only on $Y$ and not on $X_i$.
 
 
 
 ### Cons
 * Wasteful, especially in cases where observations are only missing a small fraction of variable values. May be computationally cheap, but wasteful of expensive data.  
 
-* If data isn’t MCAR, severely biased estimates of means, variances, and regression coefficients. 
+* If data isn’t MCAR, generates severely biased estimates of means, variances, and regression coefficients. 
 
 # Pairwise Deletion
 
 
 ### Description
-* Pairwise Deletion seeks to utilize ALL available data 
-* Calculates means of variables using observed data for each variable.
-* Combines this with correlations/correlations between the different variables in the dataset to impute values.
+* Pairwise Deletion seeks to utilize ALL available data. 
+* First, pairwise deletion calculates means of variables using observed data for each variable.
+* Then, combines this with correlations/covariances between the different variables in the dataset to impute values.
 
 #### Example  
 
-* First inspect initial dataset
 ```{r}
+# First inspect initial dataset
 data <- airquality[, c("Ozone", "Solar.R", "Wind")]
 head(data)
 ```
-* Compute means for each column using observed values
+
 ```{r}
+# Compute means for each column using observed values
 mu <- colMeans(data, na.rm = TRUE)
 mu
 ```
-* Compute covariances for each variable
+
 ```{r}
+# Compute covariances for each variable, generating a covariance matrix.
 cv <- cov(data, use = "pairwise")
 cv
 ```
 
-Apply pairwise deletion using the Lavaan package to obtain our estimators: coefficients for Ozone w.r.t Wind, Solar.R in regression model.
 ```{r cars}
+# Apply pairwise deletion using the Lavaan package to obtain our estimators: coefficients for 
+# Ozone w.r.t Wind, Solar.R in regression model.
 fit <- lavaan("Ozone ~ 1 + Wind + Solar.R
               Ozone ~~ Ozone",
              sample.mean = mu, sample.cov = cv,
              sample.nobs = sum(complete.cases(data)))
+help(fit)
 coef(fit)[c(2:3)]
 ```
 
@@ -115,8 +127,8 @@ coef(fit)[c(2:3)]
 
 ### Cons  
 * Requires MCAR assumption for unbiased estimates.
-* Correlation matrix obtained via pairwise deletion may give mathematically impossible results, and hence unable to perform regression analysis [see code below]
-  + Consider 4x3 data frame with some missingness
+* Correlation matrix obtained via pairwise deletion may give mathematically impossible results, and hence unable to perform further regression analysis [see code below]
+  + Consider 4x3 below data frame with some missingness
 ```{r}
 df <- data.frame(X1 = c(3,NA,2,4),
                  X2 = c(4,1,2,NA),
@@ -130,8 +142,8 @@ df
 cor(df, use=  "pairwise.complete.obs")
 ```
 
-* Covariance/Correlation matrix may not be positive definite (requirement for multivariable procedures and further analysis, e.g. MANOVA [multivariate analysis of variance]) 
-* Sample size will almost certainly vary between variables due to missingness. This is problematic for calculating standard errors as the $n$ value is ambiguous and hence either underestimated or overestimated.
+* Moreover, the covariance/correlation matrix may not be positive definite (requirement for multivariable procedures and further analysis, e.g. MANOVA [multivariate analysis of variance]) 
+* The sample size will almost certainly vary between variables due to missingness. This is problematic for calculating standard error $= \frac{\sigma}{n}$ as the $n$ value is ambiguous and hence standard error will almost certainly be underestimated/overestimated.
 
 
 # Mean Imputation
@@ -145,7 +157,7 @@ cor(df, use=  "pairwise.complete.obs")
 suppressPackageStartupMessages(library(tidyverse))
 library(tidyverse)
 ```
-Get a sense of data of interest (note missingness) using head() function to show first few rows.
+Get a sense of data of interest (note missingness).
 ```{r}
 head(airquality, n =10) %>% select(Ozone)
 
@@ -176,7 +188,7 @@ ggplot(data = imputed, aes(x = airquality.Ozone)) +
   labs(x = "Ozone values (ppb)")
 ```
   
-  Note that the imputed values all equal the mean 42.129 ppb, hence the large peak in the above histogram at that value. The distribution is now bimodal and the standard deviation has decreased from ~33.0 to ~28.7 as shown below.
+  Note that the imputed values all equal the mean of 42.129, hence the large peak in the above histogram at that value. The distribution is now bimodal and the standard deviation has decreased from ~33.0 to ~28.7 as shown below.
 ```{r}
 sd(airquality$Ozone, na.rm = TRUE)
 sd(imputed$airquality.Ozone)
@@ -203,7 +215,9 @@ sd(imputed$airquality.Ozone)
 * Fits a regression model between observed values of predictor variables $(X_1, ..., X_n)$ and response variable $Y$.
 * Imputes NA values with the exact predicted values from regression model.
 
-#### Example
+### Example  
+
+
 ```{r}
 # Fit linear regression model to Ozone w.r.t Solar.R from airquality built-in dataset.
 fit <- lm(Ozone ~ Solar.R, data = airquality)
@@ -214,14 +228,23 @@ pred_df <- as.data.frame(pred)
 ```
  
 ```{r}
-# Create new variable "model_ozone" that takes exact value given the fitted model, and new variable "combined_ozone" that takes observed "Ozone" value if it's not missing, "model_ozone" value if missing.
+# Create new variable "model_ozone" that takes exact value given the fitted model, 
+# and new variable "combined_ozone" that takes observed "Ozone" value if it's not missing
+# "model_ozone" value if missing.
 airquality_processed <- airquality %>% 
   select(Ozone, Solar.R) %>%
   mutate(model_ozone = pred_df$pred) %>%
-  mutate(combined_ozone = if_else(is.na(Ozone), model_ozone, as.numeric(Ozone), missing = NULL)) %>% mutate(combined_ozone_type = if_else(is.na(Ozone), "imputed", "observed", missing = NULL)) %>% relocate(Solar.R, .after = combined_ozone) %>% relocate(combined_ozone)
+  mutate(combined_ozone = if_else(is.na(Ozone), model_ozone, as.numeric(Ozone)
+                                  , missing = NULL)) %>%
+  mutate(combined_ozone_type = if_else(is.na(Ozone), "imputed", "observed"
+                                       , missing = NULL)) %>% 
+  relocate(Solar.R, .after = combined_ozone) %>% 
+  relocate(combined_ozone)
 head(airquality_processed, n = 25)
 ```
+
 * Note the imputed values in the scatter plot below are exactly the predicted values from the regression fit with no added randomness. This increases the correlation and decreases variance, as shown in the next chunks. 
+
 ```{r warning = FALSE}
 airquality_processed %>% 
   ggplot(aes(x = Solar.R,y= combined_ozone, color = combined_ozone_type)) + 
@@ -235,6 +258,7 @@ cor.test(airquality_processed$Ozone, airquality_processed$Solar.R)$estimate
 # Correlation for observed/imputed values 
 cor.test(airquality_processed$combined_ozone, airquality_processed$Solar.R)$estimate
 ```
+
 ```{r}
 # Variance for observed values
 var(airquality_processed$Ozone, airquality_processed$Solar.R, na.rm = TRUE)
@@ -244,33 +268,41 @@ var(airquality_processed$combined_ozone, airquality_processed$Solar.R, na.rm = T
 ```
 
 
-
-
 ### Pros
 * Yields unbiased mean estimates under MCAR, and regression weights of imputation model if the explanatory variables are complete.
-* Yields unbiased estimators for regression weights under MAR, if the variable causing the MAR is part of the regression model. (e.g. if Solar.R was responsible for missingness in Ozone)
+* Yields unbiased estimators for regression weights under MAR, if the variable causing the MAR is part of the regression model. (e.g. if Solar.R was responsible for missingness in Ozone in the abobe example)
 
 
 ### Cons
 * Since imputed values are the exact predicted values from the regression model, correlation is overestimated and variability is underestimaed
-* Imputations are realistic if predicted linear model is almost perfect, but deterministic regression often too precise and too good to be true; spurious relations and false positives abound. ---
+* Imputations are realistic if predicted linear model is almost perfect, but deterministic regression often too precise and too good to be true; spurious relations and false positives abound. 
 
 # Stochastic Regression Imputation
 
 ### Description
 * Very similar to deterministic regression imputation but as an extra step adds noise (random draw from residual) to predictions to account for the uncertainty in imputation.
 
-#### Example
+
+### Example 
+
+
 ```{r}
-# remove rows with no information, add indicator variable for whether a row requires imputation or not.
+# remove rows with no information, add indicator variable for whether a row requires 
+# imputation or not.
 data <- airquality[, c("Ozone", "Solar.R")]  %>% 
   filter(!is.na(Ozone) | !is.na(Solar.R)) %>% 
   mutate(imputed_or_not = if_else(is.na(Ozone) | is.na(Solar.R) , "imputed", "observed"))
 
-# "method = norm.nob" applies imputation to "data" (w/o indicator) using stochastic regression. The other parameters in mice() aren't relevant for this section. 
-imp <- mice(data %>% select(Ozone, Solar.R), method = "norm.nob", m = 1, maxit = 1, seed = 1, print = FALSE)
-imputed_airquality_dataset <- complete(imp) %>% add_column(data$imputed_or_not) %>% rename(imputation_indicator = "data$imputed_or_not")
+# "method = norm.nob" applies imputation to "data" (w/o indicator) using stochastic
+# regression. The other parameters in mice() aren't relevant for this section. 
+imp <- mice(data %>% select(Ozone, Solar.R), method = "norm.nob", m = 1, maxit = 1,
+            seed = 1, print = FALSE)
+imputed_airquality_dataset <- complete(imp) %>% 
+  add_column(data$imputed_or_not) %>% 
+  rename(imputation_indicator = "data$imputed_or_not")
 ```
+
+
 ```{r}
 imputed_airquality_dataset %>% 
   ggplot(aes(x = Solar.R,y= Ozone, color = imputation_indicator)) + 
@@ -279,7 +311,9 @@ imputed_airquality_dataset %>%
        x = "Solar Radiation")
 ```
   
-#### Recall the deterministic regression imputation plot and note the random noise added to imputed values above: 
+*Recall the deterministic regression imputation plot (below for conveninence)* 
+*and note the random noise added to imputed values above:*   
+
 ![](images/deterministic_regression_imp.png)
 
 ### Pros
@@ -298,17 +332,18 @@ imputed_airquality_dataset %>%
 * LOCF (Last Observation Carried Forward) is a way of imputing longitudinal data.
 * It imputes missing values by replacing them with the latest observed value. Typically seen in clinical trials
   
-#### Example
+### Example
 
 
-```{r}
+```{r, tidy = TRUE}
 # add a missingness indicator for the Ozone variable using the airquality dataset. 
 airquality_indicator <- airquality %>% 
   mutate(imputation_indicator = if_else(is.na(Ozone), "imputed", "observed"))
 
-# Using the tidyr package, impute Ozone NA values with the previous observed value
+# Using the tidyr package, impute Ozone NA values with the previous observed value.
 airquality2 <- tidyr::fill(airquality_indicator, Ozone)
-# plot a line graph using the first 30 observations in the dataset. Notice imputed values have the same value as the previous observed value under LOCF. 
+# plot a line graph using the first 30 observations in the dataset. 
+# Notice imputed values have the same value as the previous observed value under LOCF. 
 head(airquality2, 30) %>% ggplot(aes(x = Day,y= Ozone, )) + 
   geom_line() + 
   geom_point(aes(color = imputation_indicator)) + 
@@ -321,10 +356,9 @@ head(airquality2, 30) %>% ggplot(aes(x = Day,y= Ozone, )) +
 * Conceptually very simple to generate a complete dataset.
 * Computationally cheap relative to other techniques that may be more statistically sound (e.g. multiple imputation).
 
-
 ### Cons
 * Should only be applied when we are confident in cases where we are certain what the missing values should be.
-* Can yield biased estimators even under MCAR 
+* Can yield biased estimators even under MCAR. 
 
 
 # BOCF (longitudinal data imputation)
@@ -333,12 +367,14 @@ head(airquality2, 30) %>% ggplot(aes(x = Day,y= Ozone, )) +
 * BOCF (Base Observation Carried Forward) is a way of imputing longitudinal data.
 * As per its name suggests, BOCF imputes missing values by replacing them with some predetermined baseline value. Typically used in clinical trials where a "baseline value" can easily be established. 
   
-#### Example
+### Example  
+
 ```{r}
 # Store baseline (first observation) of relevant variable [Ozone in this case] 
 baseline_Ozone = (airquality$Ozone)[1]
 
-# Impute missing values with baseline observation as well as adding ozone missingness indicator variable.
+# Impute missing values with baseline observation as well as adding ozone 
+# missingness indicator variable.
 airquality_LOCF <- airquality %>% 
   mutate(imputation_indicator = if_else(is.na(Ozone), "imputed", "observed")) %>% 
   replace_na(list(Ozone = baseline_Ozone))
@@ -346,9 +382,10 @@ airquality_LOCF <- airquality %>%
 
 ```
   
-* Notice in BOCF imputed values are equal to the baseline value observed on Day 1
+* Notice in BOCF imputed values are equal to the baseline value observed on Day 1.
 ```{r}
-# Create line graph of ozone vs day for the first 30 observations, where imputed values are highlighted using red.
+# Create line graph of ozone vs day for the first 30 observations, 
+# where imputed values are highlighted using red.
 head(airquality_LOCF, 30) %>% ggplot(aes(x = Day,y= Ozone)) + 
   geom_line() + 
   geom_point( aes(color = imputation_indicator)) + 
@@ -374,16 +411,14 @@ head(airquality_LOCF, 30) %>% ggplot(aes(x = Day,y= Ozone)) +
 ### Description
 
 * Imputation technique applicable when explanatory variable(s) have missingness but response does not.
-* Missing values are replaced by a fixed value (usually 0 or observed values’ mean), and a missingness indicator variable is added to each observation in the dataset for each incomplete variable.
+* Missing values are replaced by a fixed value (usually 0 or mean imputation), and a missingness indicator variable is added to each observation in the dataset for each incomplete variable.
 
 #### Example
   * Initial unaltered dataset. Note the 6 variables.
 ```{r}
-
 head(airquality)
 ```
    
-* Note how airquality2 now has 7 variables with the addition of the Ozone indicator.
 ```{r}
 # Impute the airquality dataset, using observed mean as the fixed imputation value.
 imp <- mice(airquality, method = "mean", m = 1,
@@ -394,15 +429,17 @@ airquality2 <- cbind(complete(imp),
 # apply multiple linear regression
 fit <- lm(Wind ~ Ozone + r.Ozone, data = airquality2)
 
-head(airquality2)
-```
+# Note how airquality2 now has 7 variables with the addition of the Ozone indicator.
 
+head(airquality2)
+
+fit$coefficients
+```
 
 
 ### Pros
 * In randomized trials, can be used to generate unbiased estimators in MCAR and MAR covariate situations.
 * Retains the whole observed dataset.
-
 
 ### Cons
 * In nonrandomized studies (e.g. observational studies), this method can result in biased estimators and associations between variables even in MCAR situations. 
@@ -416,7 +453,13 @@ head(airquality2)
   
 *Imputing one value for a missing datum cannot be correct in general, because we don’t know what value to impute with certainty (if we did, it wouldn’t be missing)— Donald B. Rubin*
   
-Mulitple Imputation Pipeline:
+**Mulitple Imputation Pipeline:**
+
+
+```{r, out.width="50%", fig.align = "center"}
+# multiple imputation schematic
+knitr::include_graphics("images/multiple_imputation.png")
+```
 
 1. Imputation method for multivariate data that takes an incomplete dataset as input and creates multiple copies of the observed data.
   
@@ -434,21 +477,19 @@ Mulitple Imputation Pipeline:
   
 * Note that multiple imputation has serious depth to it (changing predictor matrix, passive imputation, etc.) that I will not be discussing in detail here.
 
-```{r, out.width="50%", fig.align = "center"}
-# multiple imputation schematic
-knitr::include_graphics("images/multiple_imputation.png")
-```
 #### Example  
 
-* The mice() function applies multiple imputation. The *m* parameter refers to the # of datasets we want to create, i.e. the # of circles in the 2nd and 3rd steps of the schematic above.
+* The *mice()* function applies multiple imputation. The *m* parameter refers to the # of datasets we want to create, i.e. the # of circles in the 2nd and 3rd steps of the schematic above.
 ```{r}
 # [step 1 above]
 incomplete_data <- airquality
 # [Step 2 above] Apply multiple imputation to airquality to create m = 20 datasets 
 imp <- mice(incomplete_data, seed = 1, m = 20, print = FALSE)
-# [step 3 above] Fits multiple linear regression model to predict Ozone using Wind, Temp, Solar.R as predictor vars
+# [step 3 above] Fits multiple linear regression model to predict Ozone using 
+# Wind, Temp, Solar.R as predictor vars
 fit <- with(imp, lm(Ozone ~ Wind + Temp + Solar.R))
-# [step 4 above] pools the twenty datasets' estimated parameters [B_0, B_1, B_2, B_3] to obtain a single pooled set of parameters
+# [step 4 above] pools the twenty datasets' estimated parameters 
+# [B_0, B_1, B_2, B_3] to obtain a single pooled set of parameters
 summary(pool(fit))
 ```
 ```{r,out.width = "50%", fig.align = "center"}
@@ -457,20 +498,17 @@ knitr::include_graphics("images/mi_first_imp.png")
 
 ```
   
-
 ### Pros:
 * Gives unbiased and confidence-valid estimators under MAR, MCAR.  
 
-* Highly versatile and general technique. Can accommodate situations where we have low (high) confidence in missing values by having a large (small) number of imputed dataset copies m.  
+* Highly versatile and general technique. Can accommodate situations where we have low (high) confidence in missing values by having a large (small) number of imputed dataset copies *m*.  
 
-* Produces a suitable standard error value (listwise deletion produces too large standard error, other techniques produce too small standard error) close to true value. 
+* Produces a suitable standard error value (listwise deletion produces too large standard error, other techniques produce too small standard error) close to true value.
 
 ### Cons:
 
 * Ad-hoc methods specified above may work better & faster in edge cases. For example, listwise deletion is equivalent and faster than multiple imputation if missing values occur only in the outcome.
   + This is because if missingness is only in the outcome, then missing data model is the same as the prediction model as no predictors are imputed. Hence, multiple imputation will simply perform complete-case analysis in a roundabout way.
-   
-* Multiple imputation has multiple parameters that can be varied (# of imputations m, # of iterations maxit, predictor matrix, imputation method, etc.) and so can be hard to work with & optimize for given situation.
-  
+* Multiple imputation has multiple parameters that can be varied (# of imputations *m*, # of iterations *maxit*, predictor matrix, imputation method, etc.) and so can be hard to work with & optimize for given situation.
 * Doesn’t create unbiased estimators under MNAR.
 
