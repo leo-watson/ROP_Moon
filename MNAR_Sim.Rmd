@@ -1,0 +1,32 @@
+---
+title: "MNAR_Sim"
+output: html_document
+date: '2022-07-04'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#MNAR
+data <- na.omit(airquality)
+
+data_nmar <- data
+# e.g. if median is 10.0, higher is a double that stores all the observed wind values greater than 10.0
+# store data values greater than median as they will be mutated in next step
+higher <- data_nmar$Wind[data_nmar$Wind > mean(data_nmar$Wind)]
+# lower <- data_nmar$Wind[data_nmar$Wind <= median(data_nmar$Wind)]
+# "sample" here takes a sample of T (0.1 prob) / F (0.9 prob) with replacement of size equal to "higher". Since sample outputs a logical vector, TRUE corresponds to if statement being satisfied , FALSE corresponds to if statement not being satisfied. 
+# Thus, TRUE => replace greater_than_median vals with NA, FALSE => no change.
+data_nmar$Wind[data_nmar$Wind > mean(data_nmar$Wind)] = ifelse(sample(
+  c(T, F), length(data_nmar$Wind[data_nmar$Wind > median(data_nmar$Wind)]), replace=T, prob=c(0.2, 0.8)),
+  NA,
+  data_nmar$Wind[data_nmar$Wind > mean(data_nmar$Wind)])
+
+
+data_nmar$Wind
+# This is MNAR because missingness in Wind is dependent on the TRUE Wind variable's mean, which is unknown. Missingness is dependent on information that cannot be obtain without knowing the true values of the data.
+```
+
+[Inspiration for mechanism](https://stats.stackexchange.com/questions/319886/simulate-missing-data-mechanism-mar-and-mnar "Google's Homepage")
