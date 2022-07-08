@@ -25,28 +25,29 @@ In this write-up, I will discuss the missing data mechanisms of MCAR, MAR, MNAR 
 
 # Missing Data Mechanisms  
 
-## MCAR
-* We are in a MCAR missing data mechanism scenario when missingness is some constant that’s the same for all data points in a dataset (@van2018flexible).  
+## MCAR (Missing Completely at Random)
+* A **MCAR** missing data mechanism is observed when missingness is some constant $\phi$ for all observations in the sample (@van2018flexible).  
 
-* Mathematically: $P(R_i|Y_i)=P(R_i) = \phi$ (@van2018flexible). $Y_i$ is the i-th data point in our dataset $Y$, $R_i$ is an indicator for missingness ($R_i$ = 0 if not missing, $R_i$ = 1 if missing), $\phi$ is some parameter of the missing data model.  
+* Mathematically: $P(R_i|Y_i)=P(R_i) = \phi$ (@van2018flexible). Here, $Y_i$ is the response for the $i^{th}$ individual in our sample, $R_i$ is an indicator for missingness ($R_i$ = 0 if $Y_i$ is not missing, $R_i$ = 1 if $Y_i$ is missing), $\phi$ is some parameter of the missing data model. 
+  + Note that covariates $(X_1, ..., X_n)$ may also be under a MCAR mechanism with anaolgous notation.
 
 #### Example:    
 * Each student’s mark is stored in a spreadsheet by the instructor but following a computer update 10% of the data is deleted at random.  
 
 
-## MAR
-* We are in a MAR scenario when missingness is dependent on some observed variable of the data. In this case, the probability of missingness is dependent on groups defined by the data (@ritvikmath2018).  
+## MAR (Missing at Random)
+* A **MAR** mechanism is observed when missingness is dependent on some observed variable of the data. In this case, the probability of missingness is dependent on groups defined by the data (@ritvikmath2018).  
 
-* Mathematically: $P(R_i|Y_i) = P(R_i|Y_{i,o})$. (@statswithmia2020) I.e probability of missingness for the $Y_i$ observation is dependent on some characteristic of the observed data.   
+* Mathematically: $P(R_i|Y_i) = P(R_i|Y_{i,o})$. (@statswithmia2020) I.e probability of missingness for the $Y_i$ observation is dependent on some characteristic of the observed data for that observation.   
 
 #### Example  
 * Most students joined a class from day 1, but some students joined late from the waitlist due to capacity restrictions. 10% of students who joined on time had a missing submission for the first problem set, while 30% of students who joined late missed the first problem set.
-  + Mathematically, can think of each student as an observation and whether they joined from the waitlist or not as an observed variable that determines missingness probability. 
+  + Mathematically, can think of each student as an observation. Let whether they joined from the waitlist or not be binary covariate $X_1$, and first problem set submission be binary response $Y$. $X_1$ determines the probability that a student's first problem set is missing, hence this is a MAR mechanism example. 
 
 
 
 ## MNAR
-* We are in a MNAR mechanism scenario when the missingness is dependent on some reason unknown to us (@van2018flexible). In this case, the probability of missingness is dependent on the true value of the data point.
+* A **MNAR** mechanism is observed when  missingness is dependent on the true value of the data point which we don't know for all subjects.
 
 * Mathematically: $P(R_i|Y_i) \neq P(R_i|Y_{i,o})$ (@statswithmia2020). I.e. probability of missingness doesn’t depend on observed data; it depends on unobserved data which we don't know!
 
@@ -216,8 +217,9 @@ sd(imputed$airquality.Ozone)
 
 
 ### Description
-* Fits a regression model between observed values of predictor variables $(X_1, ..., X_n)$ and response variable $Y$.
-* Imputes NA values with the exact predicted values from regression model (@van2018flexible).
+* First, fits a regression model between observed values of predictor variables $(X_1, ..., X_n)$ and response variable $Y$.
+* Then, imputes NA values with the exact predicted values from regression model (@van2018flexible).
+  + Note that this method can be be used to impute missing values in predictor(s) $X_i$ by fitting a regression model between observed $(X_1, \dots , X_{i-1}, X_{i+1}, \dots , X_n, Y)$ and $X_i$. 
 
 ### Example  
 
@@ -279,7 +281,7 @@ var(airquality_processed$combined_ozone, airquality_processed$Solar.R, na.rm = T
 
 ### Cons
 * Since imputed values are the exact predicted values from the regression model, correlation is overestimated and variability is underestimated (@joachim2021).
-* Imputations are realistic if predicted linear model is almost perfect, but deterministic regression often too precise and too good to be true; spurious relations and false positives abound (@van2018flexible).
+* Imputations are realistic if predicted linear model is almost perfect, but deterministic regression is often too good to be true as the uncertainty in the imputed values is not accounted for (@van2018flexible).
 
 # Stochastic Regression Imputation
 
@@ -327,7 +329,7 @@ imputed_airquality_dataset %>%
 
 ### Cons
 * Can lead to extreme values such as negative values [e.g. negative ozone shown in example above], which are impossible in real-world. 
-* This model assumes equal dispersion of data for the entire linear model. Hence, not accurate for heteroscedastic (non-costant variance) distributions (@van2018flexible). In the example above, observed dispersion is more extreme in the 200~300Ly Solar.R band, but imputed values do not acocunt for this and follow same degree of dispersion throughout.
+* This model assumes equal dispersion of data for the entire linear model. Hence, not accurate for heteroscedastic (non-constant variance) distributions (@van2018flexible). In the example above, observed dispersion is more extreme in the 200~300Ly Solar.R band, but imputed values do not acocunt for this and follow same degree of dispersion throughout.
 
 
 # LOCF (longitudinal data imputation)
@@ -460,12 +462,12 @@ fit$coefficients
 **Mulitple Imputation Pipeline:**
 
 
-```{r, out.width="50%", fig.align = "center"}
+```{r, out.width="50%", fig.align = "center", echo = FALSE}
 # multiple imputation schematic
 knitr::include_graphics("images/multiple_imputation.png")
 ```
 
-1. Imputation method for multivariate data that takes an incomplete dataset as input and creates multiple copies of the observed data (@van2018flexible).
+1. Imputation method for multivariate data that takes an incomplete dataset as input and creates multiple copies of the complete data (@van2018flexible).
   
 2. Then, impute incomplete columns with plausible values given other columns through an iterative predictive method (methods include predictive mean matching, random forests, mean imputation, etc.) (@sam2021).
     + Iterative methods are used until imputed values converge (typically 5-10 iterations is sufficient) (@rachit2020).  
@@ -505,7 +507,7 @@ knitr::include_graphics("images/mi_first_imp.png")
 ### Pros:
 * Gives unbiased and confidence-valid estimators under MAR, MCAR (@van2018flexible).  
 
-* Highly versatile and general technique. Can accommodate situations where we have low (high) confidence in missing values by having a large (small) number of imputed dataset copies *m* (@rachit2020).  
+* Highly versatile and general technique. Can accommodate situations with low confidence in missing values by having a large number of imputed dataset copies *m*; similarly, can accomodate situations with high confidence in missing values by having a small number of imputed dataset copies *m* (@rachit2020).  
 
 * Produces a suitable standard error value (listwise deletion produces too large standard error, other techniques produce too small standard error) close to true value (@van2018flexible).
 
