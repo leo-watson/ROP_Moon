@@ -1,0 +1,184 @@
+---
+title: "MNAR_Sim"
+output: html_document
+date: '2022-07-04'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mice)
+
+```
+
+[Inspiration for mechanism](https://stats.stackexchange.com/questions/319886/simulate-missing-data-mechanism-mar-and-mnar "Google's Homepage")
+
+
+### MNAR Data Creation Function
+```{r}
+#MNAR data creation. WORKS BEST FOR AIRQUALITY DATASET
+
+MNAR.data.creation <- function(prob_missing_higher = 0.2){
+  data <- na.omit(airquality)
+  data_nmar <- data
+  # e.g. if median is 10.0, higher is a double that stores all the observed wind values   greater than 10.0
+  # store data values greater than median as they will be mutated in next step
+  higher <- data_nmar$Wind[data_nmar$Wind > median(data_nmar$Wind)]
+  # lower <- data_nmar$Wind[data_nmar$Wind <= median(data_nmar$Wind)]
+  # "sample" here takes a sample of T (0.2 prob) / F (0.8 prob) with replacement of size equal to "higher". Since sample outputs a logical vector, TRUE corresponds to if statement being satisfied , FALSE corresponds to if statement not being satisfied. 
+  # Thus, TRUE => replace greater_than_median vals with NA, FALSE => no change.
+  data_nmar$Wind[data_nmar$Wind > median(data_nmar$Wind)] = ifelse(sample(
+    c(T, F), length(data_nmar$Wind[data_nmar$Wind > median(data_nmar$Wind)]), replace=T, prob=c(prob_missing_higher, 1 - prob_missing_higher)),
+    NA,
+    data_nmar$Wind[data_nmar$Wind > median(data_nmar$Wind)])
+
+# This is MNAR because missingness in Wind is dependent on the TRUE Wind variable's median, which is unknown. Missingness is dependent on information that cannot be obtained without knowing the true values of the data.
+  data_nmar$Wind
+}
+```
+
+
+### Generalized Version. Goal is to vary missingness and see how multiple imputation does with different numbers of imputations (*m*) 
+
+```{r}
+MNAR.create.data <- function(beta = 1, sigma2 = 1, n = 50,
+                        run = 1) {
+  set.seed(seed = run)
+  x <- rnorm(n)
+  y <- beta * x + rnorm(n, sd = sqrt(sigma2))
+  as.data.frame(cbind(x = x, y = y))
+}
+
+# Create missingness in x values greater than median with specified probability.
+MNAR.make.missing <- function(data, prob_missing_higher = 0.2){
+  higher <- data$x[data$x > median(data$x)]
+  data$x[data$x > median(data$x)] = ifelse(sample(
+    c(T, F), length(data$x[data$x > median(data$x)]), replace=T, prob=c(prob_missing_higher, 1 - prob_missing_higher)),
+    NA,
+    data$x[data$x > median(data$x)])
+  data
+}
+
+MNAR.test.impute <- function(data, m = 5) {
+  imp <- mice(data, m = m, print = FALSE)
+  fit <- with(imp, lm(y ~ x))
+  tab <- summary(pool(fit), "all", conf.int = TRUE)
+  as.numeric(tab[2, c("estimate", "2.5 %", "97.5 %")])
+}
+
+```
+### Run simulations of MNAR missing data imputed using multiple imputation with varying amounts of multiple imputations *m* under differnet degrees of MNAR missingness.
+
+#### **Rule of thumb**: "m" is varied here following "rule of thumb" [given above] from Van Burren's textbook. 
+
+#### small missingness (0.2 of "higher")
+
+```{r}
+simulate <- function(runs = 10) {
+  n = 300
+  prob_missing_higher = 0.2
+  m_value = 0.5 * prob_missing_higher * n
+  res <- array(NA, dim = c(2, runs, 3))
+  dimnames(res) <- list(c("five_imps", paste(m_value, "_imputations", sep = '')),
+                        as.character(1:runs),
+                        c("estimate", "2.5 %","97.5 %"))
+  for(run in 1:runs) {
+    data <- MNAR.create.data(run = run, n = n)
+    data <- MNAR.make.missing(data, prob_missing_higher)
+    res[1, run, ] <- MNAR.test.impute(data, m= 5)
+    res[2, run, ] <- MNAR.test.impute(data, m = m_value)
+    print(paste("run", run,  "completed"))
+  }
+  res
+}
+res <- simulate(100)
+# Obtain estimates for \Beta in regression model along with 95% CI for each of the given methods.
+apply(res, c(1, 3), mean, na.rm = TRUE)
+
+# Obtain performance measures
+true <- 1
+RB <- rowMeans(res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
+AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+```
+
+
+
+#### medium missingness (0.5 of "higher")
+
+```{r}
+simulate <- function(runs = 10) {
+  n = 100
+  prob_missing_higher = 0.5
+  m_value = 0.5 * prob_missing_higher * n
+  res <- array(NA, dim = c(2, runs, 3))
+  dimnames(res) <- list(c("five_imps", paste(m_value, "_imputations", sep = '')),
+                        as.character(1:runs),
+                        c("estimate", "2.5 %","97.5 %"))
+  for(run in 1:runs) {
+    data <- MNAR.create.data(run = run, n = n)
+    data <- MNAR.make.missing(data, prob_missing_higher)
+    res[1, run, ] <- MNAR.test.impute(data, m= 5)
+    res[2, run, ] <- MNAR.test.impute(data, m = m_value)
+    print(paste("run", run,  "completed"))
+  }
+  res
+}
+res <- simulate(100)
+# Obtain estimates for \Beta in regression model along with 95% CI for each of the given methods.
+apply(res, c(1, 3), mean, na.rm = TRUE)
+
+# Obtain performance measures
+true <- 1
+RB <- rowMeans(res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
+AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+```
+
+#### large missingness (0.8 of "higher")
+
+```{r}
+simulate <- function(runs = 10) {
+  n = 100
+  prob_missing_higher = 0.8
+  m_value = 0.5 * prob_missing_higher * n
+  res <- array(NA, dim = c(2, runs, 3))
+  dimnames(res) <- list(c("five_imps", paste(m_value, "_imputations", sep = '')),
+                        as.character(1:runs),
+                        c("estimate", "2.5 %","97.5 %"))
+  for(run in 1:runs) {
+    data <- MNAR.create.data(run = run, n = n)
+    data <- MNAR.make.missing(data, prob_missing_higher)
+    res[1, run, ] <- MNAR.test.impute(data, m= 5)
+    res[2, run, ] <- MNAR.test.impute(data, m = m_value)
+    print(paste("run", run,  "completed"))
+  }
+  res
+}
+res <- simulate(100)
+# Obtain estimates for \Beta in regression model along with 95% CI for each of the given methods.
+apply(res, c(1, 3), mean, na.rm = TRUE)
+
+# Obtain performance measures
+true <- 1
+RB <- rowMeans(res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
+AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+```
+
+
+
+
+```{r}
+# Compare different levels of missingness (0.2 missing for higher vs 0.4 vs 0.6 vs 0.8)
+#See how mice does on all of these, comparing with initial dataset using performance # measures.
+```
+
