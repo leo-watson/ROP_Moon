@@ -110,7 +110,7 @@ data.frame(RB, PB, CR, AW, RMSE)
 
 ```{r}
 simulate <- function(runs = 10) {
-  n = 100
+  n = 300
   prob_missing_higher = 0.5
   m_value = 0.5 * prob_missing_higher * n
   res <- array(NA, dim = c(2, runs, 3))
@@ -144,7 +144,7 @@ data.frame(RB, PB, CR, AW, RMSE)
 
 ```{r}
 simulate <- function(runs = 10) {
-  n = 100
+  n = 300
   prob_missing_higher = 0.8
   m_value = 0.5 * prob_missing_higher * n
   res <- array(NA, dim = c(2, runs, 3))

@@ -1,0 +1,195 @@
+---
+title: "MAR_Sim"
+output: html_document
+date: '2022-06-08'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(mice)
+```
+
+## MAR (Dependence on categorical variable)
+```{r}
+# Creates function that create a dataset with 50 observations for a MUTLIPLE linear regression model with a categorical variable.  
+MAR.create.data <- function(beta = 1, sigma2 = 1, n = 50,
+                        run = 1, beta2 = 10, categorical_var = "gender" , category_one = "M", category_zero = "F") {
+  set.seed(seed = run)
+  x <- rnorm(n)
+  # p represents probability of being in some group (E.g. Male = 1 vs Female = 0)
+  z <- rbinom(n, 1, p = 0.5)
+  temp <- cbind(x = x, z = z)
+  # Note the beta2 term for categorical variable effect.
+  y <- beta * x + rnorm(n, sd = sqrt(sigma2)) + beta2 * z
+  z[z == 0] <- category_zero
+  z[z == 1] <- category_one
+  # cat_var = categorical_var
+  data <- cbind(x = x, y = y, categorical_var = z)
+  # colnames(data) <- c("x", "y", categorical_var)
+  # sort df by categorical variable.
+  df <- as.data.frame(data) %>% 
+    arrange(categorical_var)
+}
+# Creates function that removes p_0 % of data from category zero, p_1 % of data from category_one. Note this is effectively MCAR within each group (definition of MAR).
+MAR.make.missing <- function(data, p_0 = 0.3, p_1 = 0.7 ){
+  # don't generate nrow(data) times, generate count of category times.
+  counts <- count(data, categorical_var)
+  num_cat_zero <-counts[1,2]
+  num_cat_one <- counts[2,2]
+  r_zero <- rbinom(counts[1,2], 1, p_0)
+  r_one <- rbinom(counts[2,2], 1, p_1)
+  data[1:num_cat_zero,1][r_zero == 1] <- NA
+  data[(num_cat_zero +1):nrow(data), 1][r_one ==1] <- NA
+  data
+}
+# Function that calls mice (applying imputation) and applies Rubin's Rules, and creates 95% confidence intervals for parameter
+MAR.test.impute <- function(data, m = 5) {
+  # Convert numerical vars to doubles (from character).
+  data_num <- as.data.frame(apply(data[,c(1:2)], 2, as.numeric))
+  # create copy
+  data_num_complete <- data_num
+  # add the categorical var
+  data_num_complete$categorical_var <- data[,3]
+  imp <- mice(data_num_complete, m = m, print = FALSE)
+  fit <- with(imp, lm(y ~ x + categorical_var))
+  tab <- summary(pool(fit), "all", conf.int = TRUE)
+  as.numeric(tab[2, c("estimate", "2.5 %", "97.5 %")])
+}
+```
+
+### Want to test how varying the m parameter (# of imputations) in mice() function affects quality of imputations given different missingnes mechanisms within each group. 
+#### Note that for all of the scenarios, the overall %-age of missingness for the WHOLE sample is the same! 
+
+
+#### 50% missingness in both groups (i.e. MCAR)
+
+```{r}
+simulate <- function(runs = 10) {
+  res <- array(NA, dim = c(2, runs, 3))
+  dimnames(res) <- list(c("five_imputations", "fifty_imputations"),
+                        as.character(1:runs),
+                        c("estimate", "2.5 %","97.5 %"))
+  for(run in 1:runs) {
+    data <- MAR.create.data(run = run, n= 300)
+    data <- MAR.make.missing(data, p_0 = 0.5, p_1 = 0.5)
+    res[1, run, ] <- MAR.test.impute(data, m = 5)
+    res[2, run, ] <- MAR.test.impute(data, m = 50)
+  }
+  res
+}
+```
+
+```{r, warning = FALSE}
+# warning = FALSE 
+# Run the simulation and store in res. Do 1000 reps
+# Alter # of imputations (m value in mice())
+res <- simulate(100)
+
+```
+
+```{r}
+apply(res, c(1, 3), mean, na.rm = TRUE)
+
+```
+```{r}
+true <- 1
+RB <- rowMeans(res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
+AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+# e.g. m = 2, m= 5 as extra columns, 
+# try different parameter values (not 0, 1 special cases)
+# MNAR: can do by writing full liklihood given we know the missing data mechanism (true in sim but not in real world).
+# Apply mice() to MNAR with varying strengths of dependence (), see how results perform.
+```
+
+#### 30% / 70% missingness in groups
+
+```{r}
+simulate <- function(runs = 10) {
+  res <- array(NA, dim = c(2, runs, 3))
+  dimnames(res) <- list(c("five_imputations", "fifty_imputations"),
+                        as.character(1:runs),
+                        c("estimate", "2.5 %","97.5 %"))
+  for(run in 1:runs) {
+    data <- MAR.create.data(run = run, n= 300)
+    data <- MAR.make.missing(data, p_0 = 0.3, p_1 = 0.7)
+    res[1, run, ] <- MAR.test.impute(data, m = 5)
+    res[2, run, ] <- MAR.test.impute(data, m = 50)
+  }
+  res
+}
+```
+
+```{r, warning = FALSE}
+# warning = FALSE 
+# Run the simulation and store in res. Do 1000 reps
+# Alter # of imputations (m value in mice())
+res <- simulate(100)
+
+```
+
+```{r}
+apply(res, c(1, 3), mean, na.rm = TRUE)
+
+```
+```{r}
+true <- 1
+RB <- rowMeans(res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
+AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+# e.g. m = 2, m= 5 as extra columns, 
+# try different parameter values (not 0, 1 special cases)
+# MNAR: can do by writing full liklihood given we know the missing data mechanism (true in sim but not in real world).
+# Apply mice() to MNAR with varying strengths of dependence (), see how results perform.
+```
+
+#### 10% / 90% missingness in both groups 
+
+```{r}
+simulate <- function(runs = 10) {
+  res <- array(NA, dim = c(2, runs, 3))
+  dimnames(res) <- list(c("five_imputations", "fifty_imputations"),
+                        as.character(1:runs),
+                        c("estimate", "2.5 %","97.5 %"))
+  for(run in 1:runs) {
+    data <- MAR.create.data(run = run, n= 300)
+    data <- MAR.make.missing(data, p_0 = 0.5, p_1 = 0.5)
+    res[1, run, ] <- MAR.test.impute(data, m = 5)
+    res[2, run, ] <- MAR.test.impute(data, m = 50)
+  }
+  res
+}
+```
+
+```{r, warning = FALSE}
+# warning = FALSE 
+# Run the simulation and store in res. Do 1000 reps
+# Alter # of imputations (m value in mice())
+res <- simulate(100)
+
+```
+
+```{r}
+apply(res, c(1, 3), mean, na.rm = TRUE)
+
+```
+```{r}
+true <- 1
+RB <- rowMeans(res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
+AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+# e.g. m = 2, m= 5 as extra columns, 
+# try different parameter values (not 0, 1 special cases)
+# MNAR: can do by writing full liklihood given we know the missing data mechanism (true in sim but not in real world).
+# Apply mice() to MNAR with varying strengths of dependence (), see how results perform.
+```
