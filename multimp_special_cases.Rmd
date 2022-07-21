@@ -1,23 +1,33 @@
+---
+title: "Multiple Imputation Edge Cases"
+output:
+  pdf_document: default
+  html_document: default
 
-```{r}
+date: "2022-07-22, Leo Murao Watson"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 suppressPackageStartupMessages(library(mice))
 suppressPackageStartupMessages(library(tidyverse))
 ```
 
 ## Special Cases where Listwise Deletion is Preferred over Multiple Imputation
 
-### 1) Exclusively Missing data in Response Y 
+## 1) Exclusively Missing data in Response Y 
   * Let $Y$ = Ozone, $X_1$ = Wind, $X_2$ = Temp, $X_3$ = Month, $X_4$ = Day
+  * Will compare Missing Imputation and Listwise Deletion as missing data methods.
   
-  
-#### Missing Imputation
+### Missing Imputation
+
 
 
 ```{r}
 simulate_MI <- function(runs = 10) {
   airquality_processed <- airquality %>% select(Ozone, Wind, Temp, Month, Day)
   res <- array(NA, dim = c(5, runs, 3))
-  dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"), as.character(1:runs), c("estimate", "2.5%", "97.5%"))
+  dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"),
+                        as.character(1:runs), c("estimate", "2.5%", "97.5%"))
   for (run in 1:runs){
     imp_MI <- mice(airquality_processed, print = FALSE)
     fit <- with(imp_MI, lm(Ozone ~ Wind + Temp + Month + Day))
@@ -34,6 +44,7 @@ simulate_MI <- function(runs = 10) {
 ```
 
 ```{r}
+# Measure time taken for simuluating multiple imputation
 start_time <- Sys.time()
 res_MI <- simulate_MI(100)
 end_time <- Sys.time()
@@ -41,17 +52,20 @@ end_time - start_time
 ```
 
 ```{r}
+# Obtain confidence intervals & estimates for all coefficients, intercept.
 apply(res_MI, c(1, 3), mean, na.rm = TRUE)
 
 ```
 
-#### Listwise Deletion
+### Listwise Deletion
 
 ```{r}
 simulate_LD <- function(runs = 10){
-  lw_airquality <- airquality %>% select(Ozone, Wind, Temp, Month, Day) %>% filter(!is.na(Ozone))
+  lw_airquality <- airquality %>% select(Ozone, Wind, Temp, Month, Day) %>%
+    filter(!is.na(Ozone))
   res <- array(NA, dim = c(5, runs, 3))
-  dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"), as.character(1:runs), c("estimate", "2.5%", "97.5%"))
+  dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"),
+                        as.character(1:runs), c("estimate", "2.5%", "97.5%"))
   # Loop over each iteration
   for (run in 1:runs){
     fit <- with(lw_airquality, lm(Ozone ~ Wind + Temp + Month + Day))
@@ -68,17 +82,15 @@ simulate_LD <- function(runs = 10){
 
 ```
 
-```{r, warning = FALSE}
-# REMARK: no randomness in the listwise deletion process so deterministic and hence doing 1 sim <=> 1000 sims. This will affect running time (I think). In order to account for this, see code chunk below which multiplies time for single occurence of listwise deletion and multiplies by # of simulations.
-start_time <- Sys.time()
-res <- simulate_LD(100)
-end_time <- Sys.time()
-end_time - start_time
 
-```
 ```{r}
+# REMARK: no randomness in the listwise deletion process so deterministic 
+# and hence doing 1 sim <=> 1000 sims. This will affect running time. 
+# In order to account for this, this code chunk multiplies time for 
+# single occurence of listwise deletion and multiplies 
+# by # of simulations for a fairer comparison.
 start_time <- Sys.time()
-res <- simulate(1)
+res <- simulate_LD(1)
 end_time <- Sys.time()
 100*(end_time - start_time)
 ```
@@ -89,9 +101,10 @@ apply(res, c(1, 3), mean, na.rm = TRUE)
 
 ```
 
-##### Testing
 
-##### Highlight and command shift C to uncomment below
+<!-- ##### Highlight and command shift C to uncomment below -->
+<!-- ##### Testing -->
+
 <!-- ```{r} -->
 
 <!-- airquality_processed <- airquality %>% select(Ozone, Wind, Temp, Month, Day) -->
