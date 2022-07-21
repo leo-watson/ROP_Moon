@@ -1,0 +1,136 @@
+
+```{r}
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+## Special Cases where Listwise Deletion is Preferred over Multiple Imputation
+
+### 1) Exclusively Missing data in Response Y 
+  * Let $Y$ = Ozone, $X_1$ = Wind, $X_2$ = Temp, $X_3$ = Month, $X_4$ = Day
+  
+  
+#### Missing Imputation
+
+
+```{r}
+simulate_MI <- function(runs = 10) {
+  airquality_processed <- airquality %>% select(Ozone, Wind, Temp, Month, Day)
+  res <- array(NA, dim = c(5, runs, 3))
+  dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"), as.character(1:runs), c("estimate", "2.5%", "97.5%"))
+  for (run in 1:runs){
+    imp_MI <- mice(airquality_processed, print = FALSE)
+    fit <- with(imp_MI, lm(Ozone ~ Wind + Temp + Month + Day))
+    tab <- summary(pool(fit), "all", conf.int = TRUE)  
+    res[1, run, ] <- as.numeric(tab[1, c("estimate", "2.5 %", "97.5 %")])  
+    res[2, run, ] <- as.numeric(tab[2, c("estimate", "2.5 %", "97.5 %")])
+    res[3, run, ] <- as.numeric(tab[3, c("estimate", "2.5 %", "97.5 %")])
+    res[4, run, ] <- as.numeric(tab[4, c("estimate", "2.5 %", "97.5 %")])
+    res[5, run, ] <- as.numeric(tab[5, c("estimate", "2.5 %", "97.5 %")])
+  }
+  res
+}
+
+```
+
+```{r}
+start_time <- Sys.time()
+res_MI <- simulate_MI(100)
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+apply(res_MI, c(1, 3), mean, na.rm = TRUE)
+
+```
+
+#### Listwise Deletion
+
+```{r}
+simulate_LD <- function(runs = 10){
+  lw_airquality <- airquality %>% select(Ozone, Wind, Temp, Month, Day) %>% filter(!is.na(Ozone))
+  res <- array(NA, dim = c(5, runs, 3))
+  dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"), as.character(1:runs), c("estimate", "2.5%", "97.5%"))
+  # Loop over each iteration
+  for (run in 1:runs){
+    fit <- with(lw_airquality, lm(Ozone ~ Wind + Temp + Month + Day))
+    # loop over each variable
+    for (var in 1:5){
+    edges <- as.numeric((confint(fit)[var,]))
+    mid <- as.numeric(fit$coefficients)[var]
+    interval <- c(edges[1], mid, edges[2])
+    res[var, run, ] <- interval
+    }
+  }
+  res
+}
+
+```
+
+```{r, warning = FALSE}
+# REMARK: no randomness in the listwise deletion process so deterministic and hence doing 1 sim <=> 1000 sims. This will affect running time (I think). In order to account for this, see code chunk below which multiplies time for single occurence of listwise deletion and multiplies by # of simulations.
+start_time <- Sys.time()
+res <- simulate_LD(100)
+end_time <- Sys.time()
+end_time - start_time
+
+```
+```{r}
+start_time <- Sys.time()
+res <- simulate(1)
+end_time <- Sys.time()
+100*(end_time - start_time)
+```
+
+
+```{r}
+apply(res, c(1, 3), mean, na.rm = TRUE)
+
+```
+
+##### Testing
+
+##### Highlight and command shift C to uncomment below
+<!-- ```{r} -->
+
+<!-- airquality_processed <- airquality %>% select(Ozone, Wind, Temp, Month, Day) -->
+
+<!-- imp_MI <- mice(airquality_processed, print = FALSE) -->
+<!-- fit <- with(imp_MI, lm(Ozone ~ Wind + Temp + Month + Day)) -->
+<!-- tab <- summary(pool(fit), "all", conf.int = TRUE) -->
+<!-- tab -->
+
+
+<!-- # intercept_interval <- as.numeric(tab[1, c("estimate", "2.5 %", "97.5 %")]) -->
+<!-- # wind_coeff_interval <- as.numeric(tab[2, c("estimate", "2.5 %", "97.5 %")]) -->
+<!-- # temp_coeff_interval <- as.numeric(tab[3, c("estimate", "2.5 %", "97.5 %")]) -->
+<!-- # month_coeff_interval <- as.numeric(tab[4, c("estimate", "2.5 %", "97.5 %")]) -->
+<!-- # day_coeff_interval <- as.numeric(tab[5, c("estimate", "2.5 %", "97.5 %")]) -->
+<!-- # typeof(day_coeff_interval) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+
+<!-- ```{r} -->
+<!-- fit$coefficients -->
+<!-- typeof(fit$coefficients) -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- confint(fit)  -->
+<!-- typeof(confint(fit)) -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- # Intercept case -->
+<!-- edges <- as.numeric((confint(fit)[1,])) -->
+<!-- mid <- as.numeric(fit$coefficients)[1] -->
+<!-- interval <- c(edges[1], mid, edges[2]) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- res <- array(NA, dim = c(5, 1, 3)) -->
+
+<!-- ``` -->
+
+
