@@ -21,84 +21,101 @@ suppressPackageStartupMessages(library(tidyverse))
 ### Missing Imputation
 
 
-
 ```{r}
-simulate_MI <- function(runs = 10) {
+
+simulate_MI2 <- function(runs = 100) {
   airquality_processed <- airquality %>% select(Ozone, Wind, Temp, Month, Day)
   res <- array(NA, dim = c(5, runs, 3))
+  times <- array(NA, dim = c(100, 1, 1))
   dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"),
                         as.character(1:runs), c("estimate", "2.5%", "97.5%"))
   for (run in 1:runs){
+      # Note that time is only measured for the MI/imp steps 
+      # (i.e. filtering, predicting)
+    start_time <- Sys.time()
     imp_MI <- mice(airquality_processed, print = FALSE)
     fit <- with(imp_MI, lm(Ozone ~ Wind + Temp + Month + Day))
+    end_time <- Sys.time()
     tab <- summary(pool(fit), "all", conf.int = TRUE)  
     res[1, run, ] <- as.numeric(tab[1, c("estimate", "2.5 %", "97.5 %")])  
     res[2, run, ] <- as.numeric(tab[2, c("estimate", "2.5 %", "97.5 %")])
     res[3, run, ] <- as.numeric(tab[3, c("estimate", "2.5 %", "97.5 %")])
     res[4, run, ] <- as.numeric(tab[4, c("estimate", "2.5 %", "97.5 %")])
     res[5, run, ] <- as.numeric(tab[5, c("estimate", "2.5 %", "97.5 %")])
+    
+    times[run, 1, 1] <- as.numeric(end_time - start_time)
   }
-  res
+  list(res, times)
+}
+
+```
+
+
+
+```{r}
+# Run 100 iterations of multiple imputations and store
+res_MI2 <- simulate_MI2(100)
+```
+
+
+
+```{r}
+# Obtain confidence intervals & estimates for all coefficients, intercept.
+apply(res_MI2[[1]], c(1, 3), mean, na.rm = TRUE)
+
+```
+```{r}
+# Mean time for iterations of multiple imputation
+times <- res_MI2[[2]]
+mean(times)
+```
+
+###  Listwise Deletion
+
+```{r}
+simulate_LD <- function(runs = 100){
+  res <- array(NA, dim = c(5, 1, 3))
+  dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"),
+                        as.character(1), c("estimate", "2.5%", "97.5%"))
+  times <- array(NA, dim = c(runs, 1, 1))
+  # Note that time is only measured for the LD/imp steps (i.e. filtering, predicting)
+  for (run in 1:runs){
+    start_time <- Sys.time()
+    lw_airquality <- airquality %>% select(Ozone, Wind, Temp, Month, Day) %>%
+      filter(!is.na(Ozone))
+    fit <- with(lw_airquality, lm(Ozone ~ Wind + Temp + Month + Day))
+    end_time <- Sys.time()
+    times[run, 1, 1] <- as.numeric(end_time - start_time)
+    # loop over each variable. Note we do the imputation just ONCE b/c LD is 
+    # deterministic.
+    if (run == 1){
+      for (var in 1:5){
+        edges <- as.numeric((confint(fit)[var,]))
+        mid <- as.numeric(fit$coefficients)[var]
+        interval <- c(edges[1], mid, edges[2])
+        res[var, 1, ] <- interval
+      }
+    }
+  
+  }
+  list(res, times)
 }
 
 ```
 
 ```{r}
-# Measure time taken for simuluating multiple imputation
-start_time <- Sys.time()
-res_MI <- simulate_MI(100)
-end_time <- Sys.time()
-end_time - start_time
+result_LD <- simulate_LD()
 ```
 
 ```{r}
 # Obtain confidence intervals & estimates for all coefficients, intercept.
-apply(res_MI, c(1, 3), mean, na.rm = TRUE)
+apply(result_LD[[1]], c(1, 3), mean, na.rm = TRUE)
 
 ```
-
-### Listwise Deletion
-
 ```{r}
-simulate_LD <- function(runs = 10){
-  lw_airquality <- airquality %>% select(Ozone, Wind, Temp, Month, Day) %>%
-    filter(!is.na(Ozone))
-  res <- array(NA, dim = c(5, runs, 3))
-  dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"),
-                        as.character(1:runs), c("estimate", "2.5%", "97.5%"))
-  # Loop over each iteration
-  for (run in 1:runs){
-    fit <- with(lw_airquality, lm(Ozone ~ Wind + Temp + Month + Day))
-    # loop over each variable
-    for (var in 1:5){
-    edges <- as.numeric((confint(fit)[var,]))
-    mid <- as.numeric(fit$coefficients)[var]
-    interval <- c(edges[1], mid, edges[2])
-    res[var, run, ] <- interval
-    }
-  }
-  res
-}
-
-```
-
-
-```{r}
-# REMARK: no randomness in the listwise deletion process so deterministic 
-# and hence doing 1 sim <=> 1000 sims. This will affect running time. 
-# In order to account for this, this code chunk multiplies time for 
-# single occurence of listwise deletion and multiplies 
-# by # of simulations for a fairer comparison.
-start_time <- Sys.time()
-res <- simulate_LD(1)
-end_time <- Sys.time()
-100*(end_time - start_time)
-```
-
-
-```{r}
-apply(res, c(1, 3), mean, na.rm = TRUE)
-
+# Mean time for 100 instances of LD
+times_LD <- result_LD[[2]]
+mean(times_LD)
 ```
 
 
