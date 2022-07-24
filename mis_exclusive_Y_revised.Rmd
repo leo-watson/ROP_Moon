@@ -6,6 +6,8 @@ date: '2022-07-23'
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
 ```
 
 ```{r}
@@ -18,8 +20,7 @@ create.data <- function(alpha = 20, beta_1 = 1, beta_2 = 2, beta_3 = 3, beta_4 =
   x_2 <- rnorm(n)
   x_3 <- rnorm(n)
   x_4 <- rnorm(n)
-  y <- beta_1 * x_1 + beta_2 * x_2 + beta_3 * x_3 + beta_4 * x_4 + alpha
-  + rnorm(n, sd = sqrt(sigma2))
+  y <- beta_1 * x_1 + beta_2 * x_2 + beta_3 * x_3 + beta_4 * x_4 + alpha + rnorm(n, sd = sqrt(sigma2))
   cbind("Ozone" = y, "Wind"= x_1, "Temp" = x_2, "Month" = x_3, "Day" = x_4)
 }
 
@@ -31,14 +32,6 @@ MCAR.make.missing <- function(data, p = 0.5){
 ```
 
 
-```{r}
-sim_dataset <- as.data.frame(create.data(n = 200))
-# NOTE missingness here is under MCAR mechanism. Could look into MAR, MNAR for
-# further investiagtions.
-# Note p is probability to NOT be missing.
-missingness_sim_dataset <- MCAR.make.missing(sim_dataset, p = 0.7)
-missingness_sim_dataset
-```
 ### Missing Imputation
 
 ```{r}
@@ -51,6 +44,8 @@ simulate_MI2 <- function(runs = 100) {
   for (run in 1:runs){
       # Note that time is only measured for the MI/imp steps 
       # (i.e. filtering, predicting)
+    sim_dataset <- as.data.frame(create.data(n = 200, run = run))
+    missingness_sim_dataset <- MCAR.make.missing(sim_dataset, p = 0.7)
     start_time <- Sys.time()
     imp_MI <- mice(missingness_sim_dataset, print = FALSE)
     fit <- with(imp_MI, lm(Ozone ~ Wind + Temp + Month + Day))
@@ -87,16 +82,31 @@ times <- res_MI2[[2]]
 mean(times)
 ```
 
+```{r}
+# Evaluating estimates for all parameters of interest.
+res <- res_MI2[[1]]
+true <- c(20, 1, 2, 3, 4)
+RB <- rowMeans(res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
+AW <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
+RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+```
+
+
 ###  Listwise Deletion
 
 ```{r}
 simulate_LD <- function(runs = 100){
-  res <- array(NA, dim = c(5, 1, 3))
+  res <- array(NA, dim = c(5, runs, 3))
   dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"),
-                        as.character(1), c("estimate", "2.5%", "97.5%"))
+                        as.character(1:runs), c("estimate", "2.5%", "97.5%"))
   times <- array(NA, dim = c(runs, 1, 1))
   # Note that time is only measured for the LD/imp steps (i.e. filtering, predicting)
   for (run in 1:runs){
+    sim_dataset <- as.data.frame(create.data(n = 200, run = run))
+    missingness_sim_dataset <- MCAR.make.missing(sim_dataset, p = 0.7)
     start_time <- Sys.time()
     filtered_sim_dataset <- missingness_sim_dataset %>% 
       select(Ozone, Wind, Temp, Month, Day) %>%
@@ -106,14 +116,12 @@ simulate_LD <- function(runs = 100){
     times[run, 1, 1] <- as.numeric(end_time - start_time)
     # loop over each variable. Note we do the imputation just ONCE b/c LD is 
     # deterministic.
-    if (run == 1){
-      for (var in 1:5){
-        edges <- as.numeric((confint(fit)[var,]))
-        mid <- as.numeric(fit$coefficients)[var]
-        interval <- c(edges[1], mid, edges[2])
-        res[var, 1, ] <- interval
+    for (var in 1:5){
+      edges <- as.numeric((confint(fit)[var,]))
+      mid <- as.numeric(fit$coefficients)[var]
+      interval <- c(edges[1], mid, edges[2])
+      res[var, run, ] <- interval
       }
-    }
   
   }
   list(res, times)
@@ -130,6 +138,18 @@ result_LD <- simulate_LD()
 apply(result_LD[[1]], c(1, 3), mean, na.rm = TRUE)
 
 ```
+
+```{r}
+res <- result_LD[[1]]
+true <- c(20, 1, 2, 3, 4)
+RB <- rowMeans(res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
+AW <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
+RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+```
+
 ```{r}
 # Mean time for 100 instances of LD
 times_LD <- result_LD[[2]]
