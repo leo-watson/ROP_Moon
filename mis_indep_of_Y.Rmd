@@ -1,0 +1,74 @@
+---
+title: "mis_indep_of_Y"
+output: html_document
+date: '2022-07-26'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+```{r}
+MNAR.create.data <- function(beta = 1, sigma2 = 1, n = 1000,
+                        run = 1) {
+  set.seed(seed = run)
+  x <- rnorm(n)
+  y <- beta * x + rnorm(n, sd = sqrt(sigma2))
+  as.data.frame(cbind(x = x, y = y))
+}
+
+```
+
+```{r}
+create.data <- function(alpha = 20, beta_1 = 1, beta_2 = 2, beta_3 = 3, beta_4 = 4, 
+                        sigma2 = 1, n = 50, run = 1) {
+  set.seed(seed = run)
+  x_1 <- rnorm(n)
+  x_2 <- rnorm(n)
+  x_3 <- rnorm(n)
+  x_4 <- rnorm(n)
+  y <- beta_1 * x_1 + beta_2 * x_2 + beta_3 * x_3 + beta_4 * x_4 + alpha + rnorm(n, sd = sqrt(sigma2))
+  as.data.frame(cbind("Ozone" = y, "Wind"= x_1, "Temp" = x_2, "Month" = x_3, "Day" = x_4))
+  
+}
+```
+
+```{r}
+data <- create.data()
+
+head(data)
+```
+
+```{r}
+
+# For observations where x_2 > median(x_2), have a different probability of 
+# missingness in x_1 than for observations where x_2 <= median(x_2)
+# REMARK: Doesn't quite work as intended. Wind_mis values are not in correct
+# order
+MNAR.make.missing <- function(data, prob_missing_larger = 0.2, 
+                              prob_missing_smaller = 0.7){
+  higher <- data %>% filter(Temp > median(Temp)) %>% select(Wind) 
+  rx_larger <- rbinom(nrow(higher), 1, prob_missing_larger)
+  rx_smaller <- rbinom(nrow(data) - nrow(higher), 1, prob_missing_smaller)
+  rx <- c(rx_larger, rx_smaller)
+  data <- data %>% 
+    arrange(desc(Temp)) %>%
+    cbind(rx) %>% 
+    mutate(Wind_mis = case_when(rx == 1 ~ as.numeric(NA), 
+                    rx == 0 ~ as.numeric(data$Wind)))
+  # Add line below once issue in "REMARK" is fixed.
+  #data <- select(data, -c(Wind)) 
+  data
+}
+
+
+```
+
+```{r}
+
+data_mis <- MNAR.make.missing(data)
+
+data_mis
+```
