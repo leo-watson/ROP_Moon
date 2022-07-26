@@ -10,9 +10,16 @@ suppressPackageStartupMessages(library(mice))
 suppressPackageStartupMessages(library(tidyverse))
 ```
 
+  * Let $Y$ = Ozone, $X_1$ = Wind, $X_2$ = Temp, $X_3$ = Month, $X_4$ = Day
+  * Will compare Missing Imputation and Listwise Deletion as missing data methods.
+  * Suppose scientifc interest focuses on determining $\beta_1$, $\beta_2$, $\beta_3$, $\beta_4$ in the linear model $y_i = \alpha + x_1\beta_1 + x_2\beta_2 + x_3\beta_3 + x_4\beta_4 + \epsilon_i$. 
+  *Here, $\epsilon_i ~ N(0, \sigma^2)$.
+  
+## 1) Exclusively Missing data in Response Y 
+  
+  
 ```{r}
-# Governing Equation: y_i = alpha + x_1 b_1 + x_2 b_2 + x_3 b_3 + x_4 b_4 + e_i
-# note alpha is intercept
+# Draw data from artificial model specified above
 create.data <- function(alpha = 20, beta_1 = 1, beta_2 = 2, beta_3 = 3, beta_4 = 4, 
                         sigma2 = 1, n = 50, run = 1) {
   set.seed(seed = run)
@@ -24,6 +31,7 @@ create.data <- function(alpha = 20, beta_1 = 1, beta_2 = 2, beta_3 = 3, beta_4 =
   cbind("Ozone" = y, "Wind"= x_1, "Temp" = x_2, "Month" = x_3, "Day" = x_4)
 }
 
+# Remove some data to simulate real world missingness
 MCAR.make.missing <- function(data, p = 0.5){
   rx <- rbinom(nrow(data), 1, p)
   data[rx == 0, "Ozone"] <- NA
@@ -34,17 +42,18 @@ MCAR.make.missing <- function(data, p = 0.5){
 
 ### Missing Imputation
 
-```{r}
 
+```{r}
+# Simulate multiple imputation, obtaining estimates and 95% confidence interval.
 simulate_MI2 <- function(runs = 100) {
   res <- array(NA, dim = c(5, runs, 3))
   times <- array(NA, dim = c(100, 1, 1))
   dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"),
                         as.character(1:runs), c("estimate", "2.5%", "97.5%"))
+  sim_dataset <- as.data.frame(create.data(n = 200))
   for (run in 1:runs){
       # Note that time is only measured for the MI/imp steps 
       # (i.e. filtering, predicting)
-    sim_dataset <- as.data.frame(create.data(n = 200, run = run))
     missingness_sim_dataset <- MCAR.make.missing(sim_dataset, p = 0.7)
     start_time <- Sys.time()
     imp_MI <- mice(missingness_sim_dataset, print = FALSE)
@@ -65,10 +74,9 @@ simulate_MI2 <- function(runs = 100) {
 ```
 
 ```{r}
-# Run 100 iterations of multiple imputations and store
+# Run 100 iterations 
 res_MI2 <- simulate_MI2(100)
 ```
-
 
 
 ```{r}
@@ -76,14 +84,16 @@ res_MI2 <- simulate_MI2(100)
 apply(res_MI2[[1]], c(1, 3), mean, na.rm = TRUE)
 
 ```
+
 ```{r}
-# Mean time for iterations of multiple imputation
+# Mean time for the multiple imputation instances
 times <- res_MI2[[2]]
 mean(times)
 ```
 
 ```{r}
-# Evaluating estimates for all parameters of interest.
+# Evaluating imputation method performance for estimating
+# all parameters of interest.
 res <- res_MI2[[1]]
 true <- c(20, 1, 2, 3, 4)
 RB <- rowMeans(res[,, "estimate"]) - true
@@ -97,15 +107,18 @@ data.frame(RB, PB, CR, AW, RMSE)
 
 ###  Listwise Deletion
 
+
 ```{r}
+# Simulate listwise deletion, obtaining estimates and 95% confidence interval.
+
 simulate_LD <- function(runs = 100){
   res <- array(NA, dim = c(5, runs, 3))
   dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"),
                         as.character(1:runs), c("estimate", "2.5%", "97.5%"))
   times <- array(NA, dim = c(runs, 1, 1))
+  sim_dataset <- as.data.frame(create.data(n = 200))
   # Note that time is only measured for the LD/imp steps (i.e. filtering, predicting)
   for (run in 1:runs){
-    sim_dataset <- as.data.frame(create.data(n = 200, run = run))
     missingness_sim_dataset <- MCAR.make.missing(sim_dataset, p = 0.7)
     start_time <- Sys.time()
     filtered_sim_dataset <- missingness_sim_dataset %>% 
@@ -118,8 +131,8 @@ simulate_LD <- function(runs = 100){
     # deterministic.
     for (var in 1:5){
       edges <- as.numeric((confint(fit)[var,]))
-      mid <- as.numeric(fit$coefficients)[var]
-      interval <- c(edges[1], mid, edges[2])
+      estimate <- as.numeric(fit$coefficients)[var]
+      interval <- c(estimate, edges)
       res[var, run, ] <- interval
       }
   
@@ -133,6 +146,8 @@ simulate_LD <- function(runs = 100){
 result_LD <- simulate_LD()
 ```
 
+
+
 ```{r}
 # Obtain confidence intervals & estimates for all coefficients, intercept.
 apply(result_LD[[1]], c(1, 3), mean, na.rm = TRUE)
@@ -140,6 +155,8 @@ apply(result_LD[[1]], c(1, 3), mean, na.rm = TRUE)
 ```
 
 ```{r}
+# Evaluating imputation method performance for estimating
+# all parameters of interest.
 res <- result_LD[[1]]
 true <- c(20, 1, 2, 3, 4)
 RB <- rowMeans(res[,, "estimate"]) - true
@@ -155,3 +172,154 @@ data.frame(RB, PB, CR, AW, RMSE)
 times_LD <- result_LD[[2]]
 mean(times_LD)
 ```
+
+<!-- ```{r} -->
+<!-- # Governing Equation: y_i = alpha + x_1 b_1 + x_2 b_2 + x_3 b_3 + x_4 b_4 + e_i -->
+<!-- # note alpha is intercept -->
+<!-- create.data <- function(alpha = 20, beta_1 = 1, beta_2 = 2, beta_3 = 3, beta_4 = 4,  -->
+<!--                         sigma2 = 1, n = 50, run = 1) { -->
+<!--   set.seed(seed = run) -->
+<!--   x_1 <- rnorm(n) -->
+<!--   x_2 <- rnorm(n) -->
+<!--   x_3 <- rnorm(n) -->
+<!--   x_4 <- rnorm(n) -->
+<!--   y <- beta_1 * x_1 + beta_2 * x_2 + beta_3 * x_3 + beta_4 * x_4 + alpha + rnorm(n, sd = sqrt(sigma2)) -->
+<!--   cbind("Ozone" = y, "Wind"= x_1, "Temp" = x_2, "Month" = x_3, "Day" = x_4) -->
+<!-- } -->
+
+<!-- MCAR.make.missing <- function(data, p = 0.5){ -->
+<!--   rx <- rbinom(nrow(data), 1, p) -->
+<!--   data[rx == 0, "Ozone"] <- NA -->
+<!--   data -->
+<!-- } -->
+<!-- ``` -->
+
+
+<!-- ### Missing Imputation -->
+
+<!-- ```{r} -->
+
+<!-- simulate_MI2 <- function(runs = 100) { -->
+<!--   res <- array(NA, dim = c(5, runs, 3)) -->
+<!--   times <- array(NA, dim = c(100, 1, 1)) -->
+<!--   dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"), -->
+<!--                         as.character(1:runs), c("estimate", "2.5%", "97.5%")) -->
+<!--   sim_dataset <- as.data.frame(create.data(n = 200)) -->
+<!--   for (run in 1:runs){ -->
+<!--       # Note that time is only measured for the MI/imp steps  -->
+<!--       # (i.e. filtering, predicting) -->
+<!--     missingness_sim_dataset <- MCAR.make.missing(sim_dataset, p = 0.7) -->
+<!--     start_time <- Sys.time() -->
+<!--     imp_MI <- mice(missingness_sim_dataset, print = FALSE) -->
+<!--     fit <- with(imp_MI, lm(Ozone ~ Wind + Temp + Month + Day)) -->
+<!--     end_time <- Sys.time() -->
+<!--     tab <- summary(pool(fit), "all", conf.int = TRUE)   -->
+<!--     res[1, run, ] <- as.numeric(tab[1, c("estimate", "2.5 %", "97.5 %")])   -->
+<!--     res[2, run, ] <- as.numeric(tab[2, c("estimate", "2.5 %", "97.5 %")]) -->
+<!--     res[3, run, ] <- as.numeric(tab[3, c("estimate", "2.5 %", "97.5 %")]) -->
+<!--     res[4, run, ] <- as.numeric(tab[4, c("estimate", "2.5 %", "97.5 %")]) -->
+<!--     res[5, run, ] <- as.numeric(tab[5, c("estimate", "2.5 %", "97.5 %")]) -->
+
+<!--     times[run, 1, 1] <- as.numeric(end_time - start_time) -->
+<!--   } -->
+<!--   list(res, times) -->
+<!-- } -->
+
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # Run 100 iterations of multiple imputations and store -->
+<!-- res_MI2 <- simulate_MI2(100) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- # Obtain confidence intervals & estimates for all coefficients, intercept. -->
+<!-- apply(res_MI2[[1]], c(1, 3), mean, na.rm = TRUE) -->
+
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- # Mean time for iterations of multiple imputation -->
+<!-- times <- res_MI2[[2]] -->
+<!-- mean(times) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # Evaluating estimates for all parameters of interest. -->
+<!-- res <- res_MI2[[1]] -->
+<!-- true <- c(20, 1, 2, 3, 4) -->
+<!-- RB <- rowMeans(res[,, "estimate"]) - true -->
+<!-- PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true) -->
+<!-- CR <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"]) -->
+<!-- AW <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"]) -->
+<!-- RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2)) -->
+<!-- data.frame(RB, PB, CR, AW, RMSE) -->
+<!-- ``` -->
+
+
+<!-- ###  Listwise Deletion -->
+
+<!-- ```{r} -->
+<!-- simulate_LD <- function(runs = 100){ -->
+<!--   res <- array(NA, dim = c(5, runs, 3)) -->
+<!--   dimnames(res) <- list(c("Intercept", "Wind", "Temp", "Month", "Day"), -->
+<!--                         as.character(1:runs), c("estimate", "2.5%", "97.5%")) -->
+<!--   times <- array(NA, dim = c(runs, 1, 1)) -->
+<!--   sim_dataset <- as.data.frame(create.data(n = 200)) -->
+<!--   # Note that time is only measured for the LD/imp steps (i.e. filtering, predicting) -->
+<!--   for (run in 1:runs){ -->
+<!--     missingness_sim_dataset <- MCAR.make.missing(sim_dataset, p = 0.7) -->
+<!--     start_time <- Sys.time() -->
+<!--     filtered_sim_dataset <- missingness_sim_dataset %>%  -->
+<!--       select(Ozone, Wind, Temp, Month, Day) %>% -->
+<!--       filter(!is.na(Ozone)) -->
+<!--     fit <- with(filtered_sim_dataset, lm(Ozone ~ Wind + Temp + Month + Day)) -->
+<!--     end_time <- Sys.time() -->
+<!--     times[run, 1, 1] <- as.numeric(end_time - start_time) -->
+<!--     # loop over each variable. Note we do the imputation just ONCE b/c LD is  -->
+<!--     # deterministic. -->
+<!--     for (var in 1:5){ -->
+<!--       edges <- as.numeric((confint(fit)[var,])) -->
+<!--       estimate <- as.numeric(fit$coefficients)[var] -->
+<!--       interval <- c(estimate, edges) -->
+<!--       res[var, run, ] <- interval -->
+<!--       } -->
+
+<!--   } -->
+<!--   list(res, times) -->
+<!-- } -->
+
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- result_LD <- simulate_LD() -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- result_LD -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- # Obtain confidence intervals & estimates for all coefficients, intercept. -->
+<!-- apply(result_LD[[1]], c(1, 3), mean, na.rm = TRUE) -->
+
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- res <- result_LD[[1]] -->
+<!-- true <- c(20, 1, 2, 3, 4) -->
+<!-- RB <- rowMeans(res[,, "estimate"]) - true -->
+<!-- PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true) -->
+<!-- CR <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"]) -->
+<!-- AW <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"]) -->
+<!-- RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2)) -->
+<!-- data.frame(RB, PB, CR, AW, RMSE) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # Mean time for 100 instances of LD -->
+<!-- times_LD <- result_LD[[2]] -->
+<!-- mean(times_LD) -->
+<!-- ``` -->
