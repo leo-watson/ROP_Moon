@@ -10,16 +10,6 @@ suppressPackageStartupMessages(library(mice))
 suppressPackageStartupMessages(library(tidyverse))
 ```
 
-```{r}
-MNAR.create.data <- function(beta = 1, sigma2 = 1, n = 1000,
-                        run = 1) {
-  set.seed(seed = run)
-  x <- rnorm(n)
-  y <- beta * x + rnorm(n, sd = sqrt(sigma2))
-  as.data.frame(cbind(x = x, y = y))
-}
-
-```
 
 ```{r}
 create.data <- function(alpha = 20, beta_1 = 1, beta_2 = 2, beta_3 = 3, beta_4 = 4, 
@@ -55,11 +45,11 @@ MNAR.make.missing <- function(data, prob_missing_larger = 0.2,
   rx <- c(rx_larger, rx_smaller)
   data <- data %>% 
     arrange(desc(Temp)) %>%
-    cbind(rx) %>% 
-    mutate(Wind_mis = case_when(rx == 1 ~ as.numeric(NA), 
+    cbind(rx)
+  data <- data %>% mutate(Wind_mis = case_when(rx == 1 ~ as.numeric(NA), 
                     rx == 0 ~ as.numeric(data$Wind)))
   # Add line below once issue in "REMARK" is fixed.
-  #data <- select(data, -c(Wind)) 
+  data <- select(data, -c(Wind, rx)) 
   data
 }
 

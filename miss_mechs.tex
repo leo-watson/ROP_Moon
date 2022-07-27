@@ -1,0 +1,465 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+
+\hypertarget{missingness-mechanisms}{%
+\subsubsection{Missingness Mechanisms}\label{missingness-mechanisms}}
+
+Comparing multiple imputation for a dataset under MCAR, MAR, MNAR
+mechanisms with varying degrees of missingness. * Dataset is a linear
+model \$y\_i = \alpha + x\_i \beta + \epsilon\_i \$ where parameter beta
+(true value = 1) is estimated * Will observe if imputation strength
+decreases going from MCAR -\textgreater{} MAR -\textgreater{} MNAR w/
+low missingness -\textgreater{} MNAR w/ high missingness as expected.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{suppressPackageStartupMessages}\NormalTok{(}\FunctionTok{library}\NormalTok{(mice))}
+\FunctionTok{suppressPackageStartupMessages}\NormalTok{(}\FunctionTok{library}\NormalTok{(tidyverse))}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{mcar-code-inspiration-courtesy-of}{%
+\paragraph{\texorpdfstring{MCAR code inspiration courtesy of
+\href{https://stefvanbuuren.name/fimd/sec-evaluation.html}{})}{MCAR code inspiration courtesy of )}}\label{mcar-code-inspiration-courtesy-of}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MCAR.create.data }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(}\AttributeTok{beta =} \DecValTok{1}\NormalTok{, }\AttributeTok{sigma2 =} \DecValTok{1}\NormalTok{, }\AttributeTok{n =} \DecValTok{200}\NormalTok{,}
+                        \AttributeTok{run =} \DecValTok{1}\NormalTok{) \{}
+  \FunctionTok{set.seed}\NormalTok{(}\AttributeTok{seed =}\NormalTok{ run)}
+\NormalTok{  x }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(n)}
+\NormalTok{  y }\OtherTok{\textless{}{-}}\NormalTok{ beta }\SpecialCharTok{*}\NormalTok{ x }\SpecialCharTok{+} \FunctionTok{rnorm}\NormalTok{(n, }\AttributeTok{sd =} \FunctionTok{sqrt}\NormalTok{(sigma2))}
+  \FunctionTok{cbind}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MCAR.make.missing }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(data, }\AttributeTok{p =} \FloatTok{0.5}\NormalTok{)\{}
+\NormalTok{  rx }\OtherTok{\textless{}{-}} \FunctionTok{rbinom}\NormalTok{(}\FunctionTok{nrow}\NormalTok{(data), }\DecValTok{1}\NormalTok{, p)}
+\NormalTok{  data[rx }\SpecialCharTok{==} \DecValTok{0}\NormalTok{, }\StringTok{"x"}\NormalTok{] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{  data}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MCAR.test.impute }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(data) \{}
+\NormalTok{  imp }\OtherTok{\textless{}{-}} \FunctionTok{mice}\NormalTok{(data, }\AttributeTok{print =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{  fit }\OtherTok{\textless{}{-}} \FunctionTok{with}\NormalTok{(imp, }\FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x))}
+\NormalTok{  tab }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{pool}\NormalTok{(fit), }\StringTok{"all"}\NormalTok{, }\AttributeTok{conf.int =} \ConstantTok{TRUE}\NormalTok{)}
+  \FunctionTok{as.numeric}\NormalTok{(tab[}\DecValTok{2}\NormalTok{, }\FunctionTok{c}\NormalTok{(}\StringTok{"estimate"}\NormalTok{, }\StringTok{"2.5 \%"}\NormalTok{, }\StringTok{"97.5 \%"}\NormalTok{)])}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MCAR.simulate }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(}\AttributeTok{runs =} \DecValTok{10}\NormalTok{) \{}
+\NormalTok{  res }\OtherTok{\textless{}{-}} \FunctionTok{array}\NormalTok{(}\ConstantTok{NA}\NormalTok{, }\AttributeTok{dim =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, runs, }\DecValTok{3}\NormalTok{))}
+  \FunctionTok{dimnames}\NormalTok{(res) }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"MCAR"}\NormalTok{),}
+                        \FunctionTok{as.character}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\NormalTok{runs),}
+                        \FunctionTok{c}\NormalTok{(}\StringTok{"estimate"}\NormalTok{, }\StringTok{"2.5 \%"}\NormalTok{,}\StringTok{"97.5 \%"}\NormalTok{))}
+  \ControlFlowTok{for}\NormalTok{(run }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{runs) \{}
+\NormalTok{    data }\OtherTok{\textless{}{-}} \FunctionTok{MCAR.create.data}\NormalTok{(}\AttributeTok{run =}\NormalTok{ run)}
+\NormalTok{    data }\OtherTok{\textless{}{-}} \FunctionTok{MCAR.make.missing}\NormalTok{(data)}
+\NormalTok{    res[}\DecValTok{1}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MCAR.test.impute}\NormalTok{(data)}
+\NormalTok{  \}}
+\NormalTok{  res}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MCAR.res }\OtherTok{\textless{}{-}} \FunctionTok{MCAR.simulate}\NormalTok{(}\DecValTok{5}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{apply}\NormalTok{(MCAR.res, }\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{3}\NormalTok{), mean, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       estimate     2.5 %   97.5 %
+## MCAR 0.9632461 0.7745542 1.151938
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{true }\OtherTok{\textless{}{-}} \DecValTok{1}
+\NormalTok{RB }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(MCAR.res[,, }\StringTok{"estimate"}\NormalTok{]) }\SpecialCharTok{{-}}\NormalTok{ true}
+\NormalTok{PB }\OtherTok{\textless{}{-}} \DecValTok{100} \SpecialCharTok{*} \FunctionTok{abs}\NormalTok{((}\FunctionTok{mean}\NormalTok{(MCAR.res[,, }\StringTok{"estimate"}\NormalTok{]) }\SpecialCharTok{{-}}\NormalTok{ true)}\SpecialCharTok{/}\NormalTok{ true)}
+\NormalTok{CR }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(MCAR.res[,, }\StringTok{"2.5 \%"}\NormalTok{] }\SpecialCharTok{\textless{}}\NormalTok{ true }\SpecialCharTok{\&}\NormalTok{ true }\SpecialCharTok{\textless{}}\NormalTok{ MCAR.res[,, }\StringTok{"97.5 \%"}\NormalTok{])}
+\NormalTok{AW }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(MCAR.res[,, }\StringTok{"97.5 \%"}\NormalTok{] }\SpecialCharTok{{-}}\NormalTok{ MCAR.res[,, }\StringTok{"2.5 \%"}\NormalTok{])}
+\NormalTok{RMSE }\OtherTok{\textless{}{-}} \FunctionTok{sqrt}\NormalTok{(}\FunctionTok{mean}\NormalTok{(MCAR.res[,, }\StringTok{"estimate"}\NormalTok{] }\SpecialCharTok{{-}}\NormalTok{ true)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+\FunctionTok{data.frame}\NormalTok{(RB, PB, CR, AW, RMSE)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            RB       PB CR        AW       RMSE
+## 1 -0.03675394 3.675394  1 0.3773838 0.03675394
+\end{verbatim}
+
+\hypertarget{mar}{%
+\paragraph{MAR}\label{mar}}
+
+\begin{itemize}
+\tightlist
+\item
+  MAR mechanisms involve different degrees of missingness for groups
+  dependent on an observed variable in the dataset.
+\item
+  I will run simulations for varied differences in missingness between
+  the groups (\(|p_2 - p_1|\)) and see how multiple imputation performs.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Creates function that create a dataset with 200 observations for a MUTLIPLE linear regression model with a categorical variable.  }
+\NormalTok{MAR.create.data }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(}\AttributeTok{beta =} \DecValTok{1}\NormalTok{, }\AttributeTok{sigma2 =} \DecValTok{1}\NormalTok{, }\AttributeTok{n =} \DecValTok{200}\NormalTok{,}
+                        \AttributeTok{run =} \DecValTok{1}\NormalTok{, }\AttributeTok{beta2 =} \DecValTok{10}\NormalTok{, }\AttributeTok{categorical\_var =} \StringTok{"gender"}\NormalTok{ , }\AttributeTok{category\_one =} \StringTok{"M"}\NormalTok{, }\AttributeTok{category\_zero =} \StringTok{"F"}\NormalTok{) \{}
+  \FunctionTok{set.seed}\NormalTok{(}\AttributeTok{seed =}\NormalTok{ run)}
+\NormalTok{  x }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(n)}
+  \CommentTok{\# p represents probability of being in some group (E.g. Male = 1 vs Female = 0)}
+\NormalTok{  z }\OtherTok{\textless{}{-}} \FunctionTok{rbinom}\NormalTok{(n, }\DecValTok{1}\NormalTok{, }\AttributeTok{p =} \FloatTok{0.5}\NormalTok{)}
+\NormalTok{  temp }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{z =}\NormalTok{ z)}
+  \CommentTok{\# Note the beta2 term for categorical variable effect.}
+\NormalTok{  y }\OtherTok{\textless{}{-}}\NormalTok{ beta }\SpecialCharTok{*}\NormalTok{ x }\SpecialCharTok{+} \FunctionTok{rnorm}\NormalTok{(n, }\AttributeTok{sd =} \FunctionTok{sqrt}\NormalTok{(sigma2)) }\SpecialCharTok{+}\NormalTok{ beta2 }\SpecialCharTok{*}\NormalTok{ z}
+\NormalTok{  z[z }\SpecialCharTok{==} \DecValTok{0}\NormalTok{] }\OtherTok{\textless{}{-}}\NormalTok{ category\_zero}
+\NormalTok{  z[z }\SpecialCharTok{==} \DecValTok{1}\NormalTok{] }\OtherTok{\textless{}{-}}\NormalTok{ category\_one}
+  \CommentTok{\# cat\_var = categorical\_var}
+\NormalTok{  data }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y, }\AttributeTok{categorical\_var =}\NormalTok{ z)}
+  \CommentTok{\# colnames(data) \textless{}{-} c("x", "y", categorical\_var)}
+  \CommentTok{\# sort df by categorical variable.}
+\NormalTok{  df }\OtherTok{\textless{}{-}} \FunctionTok{as.data.frame}\NormalTok{(data) }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{arrange}\NormalTok{(categorical\_var)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Creates function that removes p\_0 \% of data from category zero, p\_1 \% of data from category\_one. Note this is effectively MCAR within each group (definition of MAR). Note if p\_0 = p\_1, have a MAR mechanism}
+\CommentTok{\# MAR would be if p\_0 = p\_1.}
+\NormalTok{MAR.make.missing }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(data, }\AttributeTok{p\_0 =} \FloatTok{0.4}\NormalTok{, }\AttributeTok{p\_1 =} \FloatTok{0.6}\NormalTok{ )\{}
+  \CommentTok{\# don\textquotesingle{}t generate nrow(data) times, generate count of category times.}
+\NormalTok{  counts }\OtherTok{\textless{}{-}} \FunctionTok{count}\NormalTok{(}\FunctionTok{as.data.frame}\NormalTok{(data), categorical\_var)}
+\NormalTok{  num\_cat\_zero }\OtherTok{\textless{}{-}}\NormalTok{counts[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{]}
+\NormalTok{  num\_cat\_one }\OtherTok{\textless{}{-}}\NormalTok{ counts[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{]}
+\NormalTok{  r\_zero }\OtherTok{\textless{}{-}} \FunctionTok{rbinom}\NormalTok{(counts[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{], }\DecValTok{1}\NormalTok{, p\_0)}
+\NormalTok{  r\_one }\OtherTok{\textless{}{-}} \FunctionTok{rbinom}\NormalTok{(counts[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{], }\DecValTok{1}\NormalTok{, p\_1)}
+\NormalTok{  data[}\DecValTok{1}\SpecialCharTok{:}\NormalTok{num\_cat\_zero,}\DecValTok{1}\NormalTok{][r\_zero }\SpecialCharTok{==} \DecValTok{1}\NormalTok{] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{  data[(num\_cat\_zero }\SpecialCharTok{+}\DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(data), }\DecValTok{1}\NormalTok{][r\_one }\SpecialCharTok{==}\DecValTok{1}\NormalTok{] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+\NormalTok{  data}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Function that calls mice (applying imputation) and applies Rubin\textquotesingle{}s Rules, and creates 95\% confidence intervals for parameter}
+\NormalTok{MAR.test.impute }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(data) \{}
+  \CommentTok{\# Convert numerical vars to doubles (from character).}
+\NormalTok{  data\_num }\OtherTok{\textless{}{-}} \FunctionTok{as.data.frame}\NormalTok{(}\FunctionTok{apply}\NormalTok{(data[,}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\DecValTok{2}\NormalTok{)], }\DecValTok{2}\NormalTok{, as.numeric))}
+  \CommentTok{\# create copy}
+\NormalTok{  data\_num\_complete }\OtherTok{\textless{}{-}}\NormalTok{ data\_num}
+  \CommentTok{\# add the categorical var}
+\NormalTok{  data\_num\_complete}\SpecialCharTok{$}\NormalTok{categorical\_var }\OtherTok{\textless{}{-}}\NormalTok{ data[,}\DecValTok{3}\NormalTok{]}
+\NormalTok{  imp }\OtherTok{\textless{}{-}} \FunctionTok{mice}\NormalTok{(data\_num\_complete, }\AttributeTok{print =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{  fit }\OtherTok{\textless{}{-}} \FunctionTok{with}\NormalTok{(imp, }\FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x }\SpecialCharTok{+}\NormalTok{ categorical\_var))}
+\NormalTok{  tab }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{pool}\NormalTok{(fit), }\StringTok{"all"}\NormalTok{, }\AttributeTok{conf.int =} \ConstantTok{TRUE}\NormalTok{)}
+  \FunctionTok{as.numeric}\NormalTok{(tab[}\DecValTok{2}\NormalTok{, }\FunctionTok{c}\NormalTok{(}\StringTok{"estimate"}\NormalTok{, }\StringTok{"2.5 \%"}\NormalTok{, }\StringTok{"97.5 \%"}\NormalTok{)])}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{simulate }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(}\AttributeTok{runs =} \DecValTok{10}\NormalTok{) \{}
+\NormalTok{  res }\OtherTok{\textless{}{-}} \FunctionTok{array}\NormalTok{(}\ConstantTok{NA}\NormalTok{, }\AttributeTok{dim =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, runs, }\DecValTok{3}\NormalTok{))}
+  \FunctionTok{dimnames}\NormalTok{(res) }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"No\_miss"}\NormalTok{, }\StringTok{"MCAR"}\NormalTok{, }\StringTok{"lightMAR"}\NormalTok{, }\StringTok{"moderateMAR"}\NormalTok{, }\StringTok{"extremeMAR"}\NormalTok{),}
+                        \FunctionTok{as.character}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\NormalTok{runs),}
+                        \FunctionTok{c}\NormalTok{(}\StringTok{"estimate"}\NormalTok{, }\StringTok{"2.5 \%"}\NormalTok{,}\StringTok{"97.5 \%"}\NormalTok{))}
+  \ControlFlowTok{for}\NormalTok{(run }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{runs) \{}
+\NormalTok{    data }\OtherTok{\textless{}{-}} \FunctionTok{MAR.create.data}\NormalTok{(}\AttributeTok{run =}\NormalTok{ run)}
+\NormalTok{    none\_data }\OtherTok{\textless{}{-}} \FunctionTok{MAR.make.missing}\NormalTok{(data, }\AttributeTok{p\_0 =} \DecValTok{0}\NormalTok{, }\AttributeTok{p\_1 =} \DecValTok{0}\NormalTok{)}
+\NormalTok{    MCAR\_data }\OtherTok{\textless{}{-}} \FunctionTok{MAR.make.missing}\NormalTok{(data, }\AttributeTok{p\_0 =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{p\_1 =} \FloatTok{0.5}\NormalTok{)}
+\NormalTok{    light\_data }\OtherTok{\textless{}{-}} \FunctionTok{MAR.make.missing}\NormalTok{(data, }\AttributeTok{p\_0 =} \FloatTok{0.4}\NormalTok{, }\AttributeTok{p\_1 =} \FloatTok{0.6}\NormalTok{)}
+\NormalTok{    moderate\_data }\OtherTok{\textless{}{-}} \FunctionTok{MAR.make.missing}\NormalTok{(data, }\AttributeTok{p\_0 =} \FloatTok{0.3}\NormalTok{, }\AttributeTok{p\_1 =} \FloatTok{0.7}\NormalTok{)}
+\NormalTok{    heavy\_data }\OtherTok{\textless{}{-}} \FunctionTok{MAR.make.missing}\NormalTok{(data, }\AttributeTok{p\_0 =} \FloatTok{0.2}\NormalTok{, }\AttributeTok{p\_1 =} \FloatTok{0.8}\NormalTok{)}
+\NormalTok{    res[}\DecValTok{1}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MAR.test.impute}\NormalTok{(none\_data)}
+\NormalTok{    res[}\DecValTok{2}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MAR.test.impute}\NormalTok{(MCAR\_data)}
+\NormalTok{    res[}\DecValTok{3}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MAR.test.impute}\NormalTok{(light\_data)}
+\NormalTok{    res[}\DecValTok{4}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MAR.test.impute}\NormalTok{(moderate\_data)}
+\NormalTok{    res[}\DecValTok{5}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MAR.test.impute}\NormalTok{(heavy\_data)}
+    
+\NormalTok{  \}}
+\NormalTok{  res}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{res }\OtherTok{\textless{}{-}} \FunctionTok{simulate}\NormalTok{(}\DecValTok{100}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{apply}\NormalTok{(res, }\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{3}\NormalTok{), mean, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##              estimate       2.5 %   97.5 %
+## No_miss     0.9936113  0.85130951 1.135913
+## MCAR        0.6431077  0.06603952 1.220176
+## lightMAR    0.6382964 -0.02864428 1.305237
+## moderateMAR 0.6368668 -0.09015644 1.363890
+## extremeMAR  0.6870276  0.03629055 1.337765
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{true }\OtherTok{\textless{}{-}} \DecValTok{1}
+\NormalTok{RB }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(res[,, }\StringTok{"estimate"}\NormalTok{]) }\SpecialCharTok{{-}}\NormalTok{ true}
+\NormalTok{PB }\OtherTok{\textless{}{-}} \DecValTok{100} \SpecialCharTok{*} \FunctionTok{abs}\NormalTok{((}\FunctionTok{rowMeans}\NormalTok{(res[,, }\StringTok{"estimate"}\NormalTok{]) }\SpecialCharTok{{-}}\NormalTok{ true)}\SpecialCharTok{/}\NormalTok{ true)}
+\NormalTok{CR }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(res[,, }\StringTok{"2.5 \%"}\NormalTok{] }\SpecialCharTok{\textless{}}\NormalTok{ true }\SpecialCharTok{\&}\NormalTok{ true }\SpecialCharTok{\textless{}}\NormalTok{ res[,, }\StringTok{"97.5 \%"}\NormalTok{])}
+\NormalTok{AW }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(res[,, }\StringTok{"97.5 \%"}\NormalTok{] }\SpecialCharTok{{-}}\NormalTok{ res[,, }\StringTok{"2.5 \%"}\NormalTok{])}
+\NormalTok{RMSE }\OtherTok{\textless{}{-}} \FunctionTok{sqrt}\NormalTok{(}\FunctionTok{rowMeans}\NormalTok{((res[,, }\StringTok{"estimate"}\NormalTok{] }\SpecialCharTok{{-}}\NormalTok{ true)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{))}
+\FunctionTok{data.frame}\NormalTok{(RB, PB, CR, AW, RMSE)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                       RB         PB   CR        AW       RMSE
+## No_miss     -0.006388726  0.6388726 0.96 0.2846035 0.07726176
+## MCAR        -0.356892308 35.6892308 0.81 1.1541364 0.38863360
+## lightMAR    -0.361703562 36.1703562 0.84 1.3338814 0.38417271
+## moderateMAR -0.363133163 36.3133163 0.88 1.4540465 0.39480804
+## extremeMAR  -0.312972383 31.2972383 0.89 1.3014741 0.35165293
+\end{verbatim}
+
+\hypertarget{mnar}{%
+\paragraph{MNAR}\label{mnar}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MNAR.create.data }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(}\AttributeTok{beta =} \DecValTok{1}\NormalTok{, }\AttributeTok{sigma2 =} \DecValTok{1}\NormalTok{, }\AttributeTok{n =} \DecValTok{200}\NormalTok{,}
+                        \AttributeTok{run =} \DecValTok{1}\NormalTok{) \{}
+  \FunctionTok{set.seed}\NormalTok{(}\AttributeTok{seed =}\NormalTok{ run)}
+\NormalTok{  x }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(n)}
+\NormalTok{  y }\OtherTok{\textless{}{-}}\NormalTok{ beta }\SpecialCharTok{*}\NormalTok{ x }\SpecialCharTok{+} \FunctionTok{rnorm}\NormalTok{(n, }\AttributeTok{sd =} \FunctionTok{sqrt}\NormalTok{(sigma2))}
+  \FunctionTok{as.data.frame}\NormalTok{(}\FunctionTok{cbind}\NormalTok{(}\AttributeTok{x =}\NormalTok{ x, }\AttributeTok{y =}\NormalTok{ y))}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Create missingness in x values greater than median with specified probability.}
+\NormalTok{MNAR.make.missing }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(data, }\AttributeTok{prob\_missing\_higher =} \FloatTok{0.2}\NormalTok{)\{}
+\NormalTok{  higher }\OtherTok{\textless{}{-}}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{x[data}\SpecialCharTok{$}\NormalTok{x }\SpecialCharTok{\textgreater{}} \FunctionTok{median}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{x)]}
+\NormalTok{  data}\SpecialCharTok{$}\NormalTok{x[data}\SpecialCharTok{$}\NormalTok{x }\SpecialCharTok{\textgreater{}} \FunctionTok{median}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{x)] }\OtherTok{=} \FunctionTok{ifelse}\NormalTok{(}\FunctionTok{sample}\NormalTok{(}
+    \FunctionTok{c}\NormalTok{(T, F), }\FunctionTok{length}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{x[data}\SpecialCharTok{$}\NormalTok{x }\SpecialCharTok{\textgreater{}} \FunctionTok{median}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{x)]), }\AttributeTok{replace=}\NormalTok{T, }\AttributeTok{prob=}\FunctionTok{c}\NormalTok{(prob\_missing\_higher, }\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ prob\_missing\_higher)),}
+    \ConstantTok{NA}\NormalTok{,}
+\NormalTok{    data}\SpecialCharTok{$}\NormalTok{x[data}\SpecialCharTok{$}\NormalTok{x }\SpecialCharTok{\textgreater{}} \FunctionTok{median}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{x)])}
+\NormalTok{  data}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MNAR.test.impute }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(data, }\AttributeTok{m =} \DecValTok{5}\NormalTok{) \{}
+\NormalTok{  imp }\OtherTok{\textless{}{-}} \FunctionTok{mice}\NormalTok{(data, }\AttributeTok{m =}\NormalTok{ m, }\AttributeTok{print =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{  fit }\OtherTok{\textless{}{-}} \FunctionTok{with}\NormalTok{(imp, }\FunctionTok{lm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x))}
+\NormalTok{  tab }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(}\FunctionTok{pool}\NormalTok{(fit), }\StringTok{"all"}\NormalTok{, }\AttributeTok{conf.int =} \ConstantTok{TRUE}\NormalTok{)}
+  \FunctionTok{as.numeric}\NormalTok{(tab[}\DecValTok{2}\NormalTok{, }\FunctionTok{c}\NormalTok{(}\StringTok{"estimate"}\NormalTok{, }\StringTok{"2.5 \%"}\NormalTok{, }\StringTok{"97.5 \%"}\NormalTok{)])}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{simulate }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(}\AttributeTok{runs =} \DecValTok{10}\NormalTok{) \{}
+\NormalTok{  res }\OtherTok{\textless{}{-}} \FunctionTok{array}\NormalTok{(}\ConstantTok{NA}\NormalTok{, }\AttributeTok{dim =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, runs, }\DecValTok{3}\NormalTok{))}
+  \FunctionTok{dimnames}\NormalTok{(res) }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"lightest\_MNAR"}\NormalTok{, }\StringTok{"light\_MNAR"}\NormalTok{, }\StringTok{"moderate\_MNAR"}\NormalTok{, }\StringTok{"heavy\_MNAR"}\NormalTok{, }\StringTok{"heaviest\_MNAR"}\NormalTok{),}
+                        \FunctionTok{as.character}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\NormalTok{runs),}
+                        \FunctionTok{c}\NormalTok{(}\StringTok{"estimate"}\NormalTok{, }\StringTok{"2.5 \%"}\NormalTok{,}\StringTok{"97.5 \%"}\NormalTok{))}
+  \ControlFlowTok{for}\NormalTok{(run }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{runs) \{}
+\NormalTok{    data }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.create.data}\NormalTok{(}\AttributeTok{run =}\NormalTok{ run)}
+\NormalTok{    lightest\_data }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.make.missing}\NormalTok{(data, }\AttributeTok{prob\_missing\_higher =} \FloatTok{0.2}\NormalTok{)}
+\NormalTok{    lighter\_data }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.make.missing}\NormalTok{(data, }\AttributeTok{prob\_missing\_higher =} \FloatTok{0.4}\NormalTok{)}
+\NormalTok{    moderate\_data }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.make.missing}\NormalTok{(data, }\AttributeTok{prob\_missing\_higher =} \FloatTok{0.6}\NormalTok{)}
+\NormalTok{    heavier\_data }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.make.missing}\NormalTok{(data, }\AttributeTok{prob\_missing\_higher =} \FloatTok{0.8}\NormalTok{)}
+\NormalTok{    heaviest\_data }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.make.missing}\NormalTok{(data, }\AttributeTok{prob\_missing\_higher =} \FloatTok{1.0}\NormalTok{)}
+\NormalTok{    res[}\DecValTok{1}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.test.impute}\NormalTok{(lightest\_data)}
+\NormalTok{    res[}\DecValTok{2}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.test.impute}\NormalTok{(lighter\_data)}
+\NormalTok{    res[}\DecValTok{3}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.test.impute}\NormalTok{(moderate\_data)}
+\NormalTok{    res[}\DecValTok{4}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.test.impute}\NormalTok{(heavier\_data)}
+\NormalTok{    res[}\DecValTok{5}\NormalTok{, run, ] }\OtherTok{\textless{}{-}} \FunctionTok{MNAR.test.impute}\NormalTok{(heaviest\_data)}
+    \CommentTok{\# print(paste("run", run,  "completed"))}
+\NormalTok{  \}}
+\NormalTok{  res}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{res }\OtherTok{\textless{}{-}} \FunctionTok{simulate}\NormalTok{(}\DecValTok{100}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Obtain estimates for \textbackslash{}Beta in regression model along with 95\% CI for each of the given methods.}
+\FunctionTok{apply}\NormalTok{(res, }\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{3}\NormalTok{), mean, }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##               estimate     2.5 %   97.5 %
+## lightest_MNAR 1.016957 0.8707358 1.163178
+## light_MNAR    1.017404 0.8643218 1.170486
+## moderate_MNAR 1.026153 0.8604851 1.191821
+## heavy_MNAR    1.048536 0.8545357 1.242537
+## heaviest_MNAR 1.314626 0.9111934 1.718059
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Obtain performance measures}
+\NormalTok{true }\OtherTok{\textless{}{-}} \DecValTok{1}
+\NormalTok{RB }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(res[,, }\StringTok{"estimate"}\NormalTok{]) }\SpecialCharTok{{-}}\NormalTok{ true}
+\NormalTok{PB }\OtherTok{\textless{}{-}} \DecValTok{100} \SpecialCharTok{*} \FunctionTok{abs}\NormalTok{((}\FunctionTok{rowMeans}\NormalTok{(res[,, }\StringTok{"estimate"}\NormalTok{]) }\SpecialCharTok{{-}}\NormalTok{ true)}\SpecialCharTok{/}\NormalTok{ true)}
+\NormalTok{CR }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(res[,, }\StringTok{"2.5 \%"}\NormalTok{] }\SpecialCharTok{\textless{}}\NormalTok{ true }\SpecialCharTok{\&}\NormalTok{ true }\SpecialCharTok{\textless{}}\NormalTok{ res[,, }\StringTok{"97.5 \%"}\NormalTok{])}
+\NormalTok{AW }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(res[,, }\StringTok{"97.5 \%"}\NormalTok{] }\SpecialCharTok{{-}}\NormalTok{ res[,, }\StringTok{"2.5 \%"}\NormalTok{])}
+\NormalTok{RMSE }\OtherTok{\textless{}{-}} \FunctionTok{sqrt}\NormalTok{(}\FunctionTok{rowMeans}\NormalTok{((res[,, }\StringTok{"estimate"}\NormalTok{] }\SpecialCharTok{{-}}\NormalTok{ true)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{))}
+\FunctionTok{data.frame}\NormalTok{(RB, PB, CR, AW, RMSE)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                       RB        PB   CR        AW       RMSE
+## lightest_MNAR 0.01695680  1.695680 0.97 0.2924419 0.06822474
+## light_MNAR    0.01740392  1.740392 0.96 0.3061643 0.07345546
+## moderate_MNAR 0.02615325  2.615325 0.95 0.3313363 0.08218141
+## heavy_MNAR    0.04853644  4.853644 0.88 0.3880015 0.12828771
+## heaviest_MNAR 0.31462625 31.462625 0.57 0.8068658 0.41423396
+\end{verbatim}
+
+\end{document}
