@@ -1,0 +1,40 @@
+---
+title: "logistic_regression"
+output: html_document
+date: '2022-07-31'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+x1 = rnorm(10)           # some continuous variables 
+x2 = rnorm(10)
+# defining z to be this. Coefficents are unknown. They are estimated using MLE as part of 
+# logistic regression.
+z = 1*x1 + 2*x2        # linear combination with a bias. Here, 
+# B_0 = 2, B_1 = 3 
+pr = 1/(1+exp(-z))         # pass through an inv-logit (sigmoid) function to
+                           # to constrain to [0,1]; represents odds of event
+                           # occuring
+y = rbinom(1000,1,pr)   
+data <- data.frame(y, x1, x2)
+data
+```
+
+```{r}
+create.data <- function(beta_0 = 0, beta_1 = 1, beta_2 = 2, n = 200){
+# Data. Given this.
+x1 = rnorm(n)           # some continuous variables 
+x2 = rnorm(n)
+# defining z to be this. Coefficents are unknown. They are estimated using MLE as part of 
+# logistic regression.
+z = b_0 + b_1*x1 + b_2*x2        # linear combination with a bias. Here, 
+# B_0 = 2, B_1 = 3 
+pr = 1/(1+exp(-z))         # pass through an inv-logit (sigmoid) function to
+                           # to constrain to [0,1]; represents odds of event
+                           # occuring
+y = rbinom(1000,1,pr)   
+}
+```
+
