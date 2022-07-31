@@ -11,8 +11,12 @@ suppressPackageStartupMessages(library(tidyverse))
 ```
 
 ## 2) Probability of Missing data doesn't depend on Response Y 
+  * Similarly to above, suppose scientifc interest focuses on determining $\beta_1$, $\beta_2$, $\beta_3$, $\beta_4$ in the linear model $y_i = \alpha + x_1\beta_1 + x_2\beta_2 + x_3\beta_3 + x_4\beta_4 + \epsilon_i$. 
+  * Here, $\epsilon_i ~ N(0, \sigma^2)$.
+  * The missingness model gives observations with X_2 > median(X_2) a different probability of missingness in X_1, X_3, X_4 than for observations with X_2 <= median(X_2) 
 
 ```{r}
+# Draw data from artificial model specified above
 create.data <- function(alpha = 20, beta_1 = 1, beta_2 = 2, beta_3 = 3, beta_4 = 4, 
                         sigma2 = 1, n = 200, run = 1) {
   set.seed(seed = run)
@@ -34,23 +38,31 @@ head(data)
 
 ```{r}
 
-# For observations where x_2 > median(x_2), have a different probability of 
-# missingness in x_1 than for observations where x_2 <= median(x_2)
-# REMARK: Doesn't quite work as intended. Wind_mis values are not in correct
-# order
 MNAR.make.missing <- function(data, prob_missing_larger = 0.2, 
-                              prob_missing_smaller = 0.7){
+                              prob_missing_smaller = 0.8){
+  # Setting up the randomness categories for missingness in X_1, X_3, X_4 
   higher <- data %>% filter(X_2 > median(X_2)) %>% select(X_1) 
-  rx_larger <- rbinom(nrow(higher), 1, prob_missing_larger)
-  rx_smaller <- rbinom(nrow(data) - nrow(higher), 1, prob_missing_smaller)
-  rx <- c(rx_larger, rx_smaller)
+  rx1_larger <- rbinom(nrow(higher), 1, prob_missing_larger)
+  rx1_smaller <- rbinom(nrow(data) - nrow(higher), 1, prob_missing_smaller)
+  rx3_larger <- rbinom(nrow(higher), 1, prob_missing_larger)
+  rx3_smaller <- rbinom(nrow(data) - nrow(higher), 1, prob_missing_smaller)
+  rx4_larger <- rbinom(nrow(higher), 1, prob_missing_larger)
+  rx4_smaller <- rbinom(nrow(data) - nrow(higher), 1, prob_missing_smaller)
+  rx1 <- c(rx1_larger, rx1_smaller)
+  rx3 <- c(rx3_larger, rx3_smaller)
+  rx4 <- c(rx4_larger, rx4_smaller)
   data <- data %>% 
     arrange(desc(X_2)) %>%
-    cbind(rx)
-  data <- data %>% mutate(X_1 = case_when(rx == 1 ~ as.numeric(NA), 
-                    rx == 0 ~ as.numeric(data$X_1)))
-  # Add line below once issue in "REMARK" is fixed.
-  data <- select(data, -c(rx)) 
+    cbind(rx1, rx3, rx4)
+  # Implementing the missingness in X_1, X_3, X_4
+  data <- data %>% mutate(X_1 = case_when(rx1 == 1 ~ as.numeric(NA), 
+                    rx1 == 0 ~ as.numeric(data$X_1))) %>%
+    mutate(X_3 = case_when(rx3 == 1 ~ as.numeric(NA), 
+                    rx3 == 0 ~ as.numeric(data$X_3))) %>% 
+    mutate(X_4 = case_when(rx4 == 1 ~ as.numeric(NA), 
+                    rx4 == 0 ~ as.numeric(data$X_4)))
+  # Remove setup variables
+  data <- select(data, -c(rx1, rx3, rx4)) 
   data
 }
 
@@ -61,6 +73,7 @@ MNAR.make.missing <- function(data, prob_missing_larger = 0.2,
 
 data_mis <- MNAR.make.missing(data, 0.2, 0.8)
 
+data_mis
 ```
 ### Multiple Imputation
 
@@ -144,7 +157,7 @@ simulate_LD <- function(runs = 100){
     start_time <- Sys.time()
     filtered_sim_dataset <- missingness_sim_dataset %>% 
       select(Y, X_1, X_2, X_3, X_4) %>%
-      filter(!is.na(Y))
+      filter(!is.na(X_1), !is.na(X_3), !is.na(X_4))
     fit <- with(filtered_sim_dataset, lm(Y ~ X_1 + X_2 + X_3 + X_4))
     end_time <- Sys.time()
     times[run, 1, 1] <- as.numeric(end_time - start_time)
