@@ -1,17 +1,21 @@
 ---
 title: "logistic_regression"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: '2022-07-31'
 ---
-```{r}
+```{r, include = FALSE}
 suppressPackageStartupMessages(library(mice))
 suppressPackageStartupMessages(library(tidyverse))
 ```
 
+## 2) Complete data model is logistic regression & probability to be missing depends ## only on Y
 
-# WTS: If probability to be missing depends ONLY on Y and NOT on X, and missing 
-# data is confined to either Y or X (will confine to just X in our case), then
-# LD is more efficient (and unbiased) relative to multiple imputation.
+#### WTS: If probability to be missing depends ONLY on Y and NOT on X, and missing 
+#### data is confined to either Y or X (will confine to just X in our case), then
+#### LD is more efficient (and generates unbiased regression coefficients) 
+####  relative to multiple imputation.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -39,14 +43,7 @@ data = as.data.frame(cbind(Y, x1, x2))
 }
 ```
 
-```{r}
-# In real world, this is what we are given. And then we have to fit logistic 
-# regression model [using glm function] 
-# to this following imputation [since we are doing a simulation,
-# we know the true regression model values.]
-data <- create.data(n = 1000)
-data
-```
+
 
 # Add Missingness
 ```{r}
@@ -75,24 +72,7 @@ MNAR.make.missing <- function(data, prob_missing_larger = 0.2,
 }
 
 ```
-```{r}
-data_mis <- MNAR.make.missing(data)
 
-data_mis
-```
-
-```{r}
-mod <- with(data_mis, glm(Y ~ x1 + x2, family = "binomial"))
-```
-
-```{r}
-summary(mod)
-```
-
-```{r}
-mod$coefficients
-
-```
 
 ### Multiple Imputation
 
@@ -127,10 +107,6 @@ simulate_MI2 <- function(runs = 100) {
 ```{r}
 # Run 100 iterations 
 res_MI2 <- simulate_MI2(100)
-```
-
-```{r}
-res_MI2
 ```
 
 
@@ -202,9 +178,6 @@ simulate_LD <- function(runs = 100){
 result_LD <- simulate_LD(100)
 
 ```
-```{r}
-# result_LD
-```
 
 
 ```{r}
@@ -246,4 +219,34 @@ mean(times_LD)
 # Y = rbinom(1000,1,pr)   
 # data <- data.frame(Y, x1, x2)
 # # data
+# ```
+
+# ```{r}
+# # In real world, this is what we are given. And then we have to fit logistic 
+# # regression model [using glm function] 
+# # to this following imputation [since we are doing a simulation,
+# # we know the true regression model values.]
+# data <- create.data(n = 1000)
+# data
+# ```
+
+# ```{r}
+# data_mis <- MNAR.make.missing(data)
+# 
+# data_mis
+# ```
+
+
+
+# ```{r}
+# mod <- with(data_mis, glm(Y ~ x1 + x2, family = "binomial"))
+# ```
+# 
+# ```{r}
+# summary(mod)
+# ```
+# 
+# ```{r}
+# mod$coefficients
+# 
 # ```
