@@ -1,6 +1,8 @@
 ---
 title: "mis_indep_of_Y"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: '2022-07-26'
 ---
 
@@ -73,7 +75,7 @@ MNAR.make.missing <- function(data, prob_missing_larger = 0.2,
 
 data_mis <- MNAR.make.missing(data, 0.2, 0.8)
 
-data_mis
+
 ```
 ### Multiple Imputation
 
