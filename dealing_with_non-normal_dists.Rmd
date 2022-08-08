@@ -8,3 +8,11 @@ date: '2022-08-08'
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+set.seed(5)
+#left skewness 
+hist(rbeta(100000,100,1)*10)
+#right skewness 
+hist(rbeta(100000,1,100)*10)
+```
+
