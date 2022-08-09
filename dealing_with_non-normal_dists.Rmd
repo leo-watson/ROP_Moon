@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+#t
 set.seed(5)
 #left skewness 
 hist(rbeta(100000,100,1)*10)
