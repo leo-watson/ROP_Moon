@@ -6,14 +6,107 @@ date: '2022-08-08'
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(mice))
+suppressPackageStartupMessages(library(tidyverse))
+
+set.seed(123)
+
+```
+## Raw Data
+
+### Left-Skewed
+```{r}
+
+data = cbind(rbeta(100000,1,100)*10, rnorm(100000))
+raw_data = as.data.frame(data)
+colnames(raw_data) <-c("left_skewed", "x")
+
+ggplot(data = raw_data, aes(x = left_skewed)) +
+  geom_histogram(color = "darkblue",
+                 fill = "gray") +
+  labs(x = "raw x")
+```
+
+
+###  Right-skewed
+
+
+```{r}
+ggplot(data = raw_data, aes(x = right_skewed)) +
+  geom_histogram(color = "darkblue",
+                 fill = "gray") +
+  labs(x = "raw x")
+```
+```{r}
+create.data <- function(n){
+  data <- cbind(rbeta(n,100,1)*10, rnorm(n))
+  raw_data = as.data.frame(data)
+  colnames(raw_data) <-c("right_skewed", "x")
+  raw_data
+}
+
+```
+```{r}
+MCAR.make.missing <- function(data, p = 0.75){
+  rx <- rbinom(nrow(data), 1, p)
+  data[rx == 0, "x"] <- NA
+  data
+}
+```
+```{r}
+# MCAR.make.missing(raw_data)
+```
+```{r}
+MCAR.test.impute <- function(data) {
+  imp <- mice(data, print = FALSE)
+  fit <- with(imp, lm(right_skewed ~ x))
+  tab <- summary(pool(fit), "all", conf.int = TRUE)
+  as.numeric(tab[2, c("estimate", "2.5 %", "97.5 %")])
+}
+```
+```{r}
+MCAR.simulate <- function(runs = 10) {
+  res <- array(NA, dim = c(1, runs, 3))
+  dimnames(res) <- list(c("MCAR"),
+                        as.character(1:runs),
+                        c("estimate", "2.5 %","97.5 %"))
+  print("created set-up")
+  for(run in 1:runs) {
+    print(cat("Starting", run, "run"))
+    data <- create.data(10000)
+    print("data created")
+    data <- MCAR.make.missing(data)
+    print("missingness created")
+    res[1, run, ] <- MCAR.test.impute(data)
+  }
+  res
+}
 ```
 
 ```{r}
-#tt
-set.seed(5)
-#left skewness 
-hist(rbeta(100000,100,1)*10)
-#right skewness 
-hist(rbeta(100000,1,100)*10)
+MCAR.res <- MCAR.simulate(5)
+
 ```
+
+```{r}
+apply(MCAR.res, c(1, 3), mean, na.rm = TRUE)
+
+```
+
+```{r}
+true <- 1
+RB <- mean(MCAR.res[,, "estimate"]) - true
+PB <- 100 * abs((mean(MCAR.res[,, "estimate"]) - true)/ true)
+CR <- mean(MCAR.res[,, "2.5 %"] < true & true < MCAR.res[,, "97.5 %"])
+AW <- mean(MCAR.res[,, "97.5 %"] - MCAR.res[,, "2.5 %"])
+RMSE <- sqrt(mean(MCAR.res[,, "estimate"] - true)^2)
+data.frame(RB, PB, CR, AW, RMSE)
+```
+
+# ```{r}
+# #left skewness 
+# hist(rbeta(100000,100,1)*10)
+# #right skewness 
+# hist(rbeta(100000,1,100)*10)
+# ```
 
