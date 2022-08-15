@@ -62,24 +62,11 @@ MCAR.simulate <- function(runs = 10) {
 ```
 
 ```{r}
-MCAR.res <- MCAR.simulate(10)
+MCAR.res <- MCAR.simulate(100)
 
 ```
 
-```{r}
-apply(MCAR.res, c(1, 3), mean, na.rm = TRUE)
 
-```
-
-```{r}
-true <- 1
-RB <- mean(MCAR.res[,, "estimate"]) - true
-PB <- 100 * abs((mean(MCAR.res[,, "estimate"]) - true)/ true)
-CR <- mean(MCAR.res[,, "2.5 %"] < true & true < MCAR.res[,, "97.5 %"])
-AW <- mean(MCAR.res[,, "97.5 %"] - MCAR.res[,, "2.5 %"])
-RMSE <- sqrt(mean(MCAR.res[,, "estimate"] - true)^2)
-data.frame(RB, PB, CR, AW, RMSE)
-```
 
 #### MAR
  * MAR mechanisms involve different degrees of missingness for groups dependent on an observed variable in the dataset.
@@ -167,23 +154,19 @@ simulate <- function(runs = 10) {
 ```
 
 ```{r, warning = FALSE}
-res <- simulate(10)
+MAR.res <- simulate(100)
 
 ```
-
-
 ```{r}
-apply(res, c(1, 3), mean, na.rm = TRUE)
-
+apply(MAR.res, c(1, 3), mean, na.rm = TRUE)
 ```
-
 ```{r}
 true <- 1
-RB <- rowMeans(res[,, "estimate"]) - true
-PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
-CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
-AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
-RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+RB <- rowMeans(MAR.res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(MAR.res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(MAR.res[,, "2.5 %"] < true & true < MAR.res[,, "97.5 %"])
+AW <- rowMeans(MAR.res[,, "97.5 %"] - MAR.res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((MAR.res[,, "estimate"] - true)^2))
 data.frame(RB, PB, CR, AW, RMSE)
 ```
 
@@ -248,23 +231,49 @@ simulate <- function(runs = 10) {
 ```
 
 ```{r}
-res <- simulate(10)
+MNAR.res <- simulate(100)
 
 ```
- * Obtain estimates for beta in regression model along with 95% CI for each of the given methods.
+
+#### Results
+
+
 ```{r}
+apply(MCAR.res, c(1, 3), mean, na.rm = TRUE)
 
-apply(res, c(1, 3), mean, na.rm = TRUE)
 ```
- * Obtain performance measures
-
 ```{r}
 true <- 1
-RB <- rowMeans(res[,, "estimate"]) - true
-PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
-CR <- rowMeans(res[,, "2.5 %"] < true & true < res[,, "97.5 %"])
-AW <- rowMeans(res[,, "97.5 %"] - res[,, "2.5 %"])
-RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
+RB <- mean(MCAR.res[,, "estimate"]) - true
+PB <- 100 * abs((mean(MCAR.res[,, "estimate"]) - true)/ true)
+CR <- mean(MCAR.res[,, "2.5 %"] < true & true < MCAR.res[,, "97.5 %"])
+AW <- mean(MCAR.res[,, "97.5 %"] - MCAR.res[,, "2.5 %"])
+RMSE <- sqrt(mean(MCAR.res[,, "estimate"] - true)^2)
 data.frame(RB, PB, CR, AW, RMSE)
 ```
 
+```{r}
+apply(MAR.res, c(1, 3), mean, na.rm = TRUE)
+```
+```{r}
+true <- 1
+RB <- rowMeans(MAR.res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(MAR.res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(MAR.res[,, "2.5 %"] < true & true < MAR.res[,, "97.5 %"])
+AW <- rowMeans(MAR.res[,, "97.5 %"] - MAR.res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((MAR.res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+```
+
+```{r}
+apply(MNAR.res, c(1, 3), mean, na.rm = TRUE)
+```
+```{r}
+true <- 1
+RB <- rowMeans(MNAR.res[,, "estimate"]) - true
+PB <- 100 * abs((rowMeans(MNAR.res[,, "estimate"]) - true)/ true)
+CR <- rowMeans(MNAR.res[,, "2.5 %"] < true & true < MNAR.res[,, "97.5 %"])
+AW <- rowMeans(MNAR.res[,, "97.5 %"] - MNAR.res[,, "2.5 %"])
+RMSE <- sqrt(rowMeans((MNAR.res[,, "estimate"] - true)^2))
+data.frame(RB, PB, CR, AW, RMSE)
+```

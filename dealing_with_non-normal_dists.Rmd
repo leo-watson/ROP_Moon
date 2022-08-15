@@ -29,6 +29,8 @@ ggplot(data = raw_data, aes(x = left_skewed)) +
 
 
 ###  Right-skewed
+```{r}
+```
 
 
 ```{r}
@@ -46,6 +48,25 @@ create.data <- function(n){
 }
 
 ```
+```{r}
+create.data2 <- function(beta_0 = 0, beta_1 = 1, beta_2 = 2, n = 200){
+# Data. Given this.
+x1 = rnorm(n)           # some continuous variables 
+# defining z to be this. Coefficents are unknown. They are estimated using MLE as part of 
+# logistic regression.
+z = beta_0 + beta_1*x1         # linear combination with a bias. Here, 
+# B_0 = 1. The coefficeints represent change in log odds. I.e. if 
+# x1 increases by 1, log odds increase by 1, i.e. odds of a "1" if x2 increases
+# by 2 is exp(1) = 2.718 higher than original x2.
+pr = 1/(1+exp(-z))         # pass through an inv-logit (sigmoid) function to
+                           # to constrain to [0,1]; represents odds of event
+                           # occuring
+Y = rbinom(n,1,pr)   
+data = as.data.frame(cbind(Y, x1, x2))
+
+}
+```
+
 ```{r}
 MCAR.make.missing <- function(data, p = 0.75){
   rx <- rbinom(nrow(data), 1, p)
@@ -70,13 +91,13 @@ MCAR.simulate <- function(runs = 10) {
   dimnames(res) <- list(c("MCAR"),
                         as.character(1:runs),
                         c("estimate", "2.5 %","97.5 %"))
-  print("created set-up")
+  # print("created set-up")
   for(run in 1:runs) {
-    print(cat("Starting", run, "run"))
+    # print(cat("Starting", run, "run"))
     data <- create.data(10000)
-    print("data created")
+    # print("data created")
     data <- MCAR.make.missing(data)
-    print("missingness created")
+    # print("missingness created")
     res[1, run, ] <- MCAR.test.impute(data)
   }
   res
