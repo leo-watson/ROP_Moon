@@ -30,17 +30,19 @@ create.data <- function(alpha = 20, beta_1 = 1, beta_2 = 2, beta_3 = 3, beta_4 =
   x_2 <- rnorm(n)
   x_3 <- rnorm(n)
   x_4 <- rnorm(n)
-  y <- beta_1 * x_1 + beta_2 * x_2 + beta_3 * x_3 + beta_4 * x_4 + alpha + rnorm(n, sd = sqrt(sigma2))
+  y <- beta_1 * x_1 + beta_2 * x_2 + beta_3 * x_3 + beta_4 * x_4 + alpha + 
+    rnorm(n, sd = sqrt(sigma2))
   cbind("Y" = y, "X_1"= x_1, "X_2" = x_2, "X_3" = x_3, "X_4" = x_4)
 }
 
 # Remove some data to simulate real world missingness
 MCAR.make.missing <- function(data, p = 0.5){
   rx <- rbinom(nrow(data), 1, p)
-  data[rx == 0, "Ozone"] <- NA
+  data[rx == 0, "Y"] <- NA
   data
 }
 ```
+
 
 
 ### Missing Imputation
@@ -57,7 +59,7 @@ simulate_MI2 <- function(runs = 100) {
   for (run in 1:runs){
       # Note that time is only measured for the MI/imp steps 
       # (i.e. filtering, predicting)
-    missingness_sim_dataset <- MCAR.make.missing(sim_dataset, p = 0.7)
+    missingness_sim_dataset <- MCAR.make.missing(sim_dataset, p = 0.5)
     start_time <- Sys.time()
     imp_MI <- mice(missingness_sim_dataset, print = FALSE)
     fit <- with(imp_MI, lm(Y ~ X_1 + X_2 + X_3 + X_4))
@@ -78,8 +80,7 @@ simulate_MI2 <- function(runs = 100) {
 
 ```{r}
 # Run 100 iterations 
-res_MI2 <- simulate_MI2(10)
-
+res_MI2 <- simulate_MI2(100)
 ```
 
 
@@ -149,6 +150,7 @@ simulate_LD <- function(runs = 100){
 ```{r}
 result_LD <- simulate_LD()
 ```
+
 
 
 

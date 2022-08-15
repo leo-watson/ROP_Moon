@@ -39,6 +39,9 @@ MCAR.make.missing <- function(data, p = 0.5){
 }
 ```
 
+```{r}
+MCAR.make.missing(create.data(), 0.2)
+```
 
 ### Missing Imputation
 
@@ -75,7 +78,7 @@ simulate_MI2 <- function(runs = 100) {
 
 ```{r}
 # Run 100 iterations 
-res_MI2 <- simulate_MI2(100)
+res_MI2 <- simulate_MI2(10)
 ```
 
 
