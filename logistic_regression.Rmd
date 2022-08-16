@@ -72,6 +72,10 @@ MNAR.make.missing <- function(data, prob_missing_larger = 0.2,
 }
 
 ```
+```{r}
+set.seed(123)
+dd <- MNAR.make.missing(create.data())
+```
 
 
 ### Multiple Imputation
