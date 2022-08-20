@@ -10,6 +10,8 @@ date: '2022-07-26'
 knitr::opts_chunk$set(echo = TRUE)
 suppressPackageStartupMessages(library(mice))
 suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(dplyr))
 ```
 
 ## 2) Probability of Missing data doesn't depend on Response Y 
@@ -124,7 +126,7 @@ apply(res_MI2[[1]], c(1, 3), mean, na.rm = TRUE)
 ```{r}
 # Mean time for the multiple imputation instances
 times <- res_MI2[[2]]
-mean(times)
+Multiple_Imputation <- mean(times)
 ```
 
 
@@ -134,12 +136,14 @@ mean(times)
 # all parameters of interest.
 res <- res_MI2[[1]]
 true <- c(20, 1, 2, 3, 4)
-RB <- rowMeans(res[,, "estimate"]) - true
-PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
-CR <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
-AW <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
+
+Raw_Bias <- rowMeans(res[,, "estimate"]) - true
+Percent_Bias <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+Coverage_Rate <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
+Average_Width <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
 RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
-data.frame(RB, PB, CR, AW, RMSE)
+MI_measures <- data.frame(Raw_Bias, Percent_Bias, Coverage_Rate, Average_Width, RMSE)
+knitr::kable(round(MI_measures, 3), align = "ccccc") %>% kable_styling()
 ```
 
 ###  Listwise Deletion
@@ -194,17 +198,30 @@ apply(result_LD[[1]], c(1, 3), mean, na.rm = TRUE)
 # all parameters of interest.
 res <- result_LD[[1]]
 true <- c(20, 1, 2, 3, 4)
-RB <- rowMeans(res[,, "estimate"]) - true
-PB <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
-CR <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
-AW <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
+Raw_Bias <- rowMeans(res[,, "estimate"]) - true
+Percent_Bias <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
+Coverage_Rate <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
+Average_Width <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
 RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
-data.frame(RB, PB, CR, AW, RMSE)
+LD_measures <- data.frame(Raw_Bias, Percent_Bias, Coverage_Rate, Average_Width, RMSE)
 ```
 
 ```{r}
 # Mean time for 100 instances of LD
 times_LD <- result_LD[[2]]
 mean(times_LD)
+ListwiseDeletion <- mean(times_LD)
+```
+
+```{r}
+mean_times <- as.data.frame(rbind(Multiple_Imputation, ListwiseDeletion), col.names = "average_runtime")
+colnames(mean_times) <- "average-runtime"
+mean_times
+knitr::kable(mean_times) %>% kable_styling(full_width = F)
+```
+
+
+```{r}
+knitr::kable(round(LD_measures, 3), align = "ccccc") %>% kable_styling()
 ```
 
