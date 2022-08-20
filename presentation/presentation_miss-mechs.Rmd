@@ -12,7 +12,13 @@ Comparing multiple imputation for a dataset under MCAR, MAR, MNAR mechanisms wit
 ```{r, include = FALSE}
 suppressPackageStartupMessages(library(mice))
 suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(forestplot))
+suppressPackageStartupMessages(library(dplyr))
 ```
+```{r}
+```
+
 
 #### MCAR 
 
@@ -158,7 +164,7 @@ MAR.res <- simulate(100)
 
 ```
 ```{r}
-apply(MAR.res, c(1, 3), mean, na.rm = TRUE)
+means <- apply(MAR.res, c(1, 3), mean, na.rm = TRUE)
 ```
 ```{r}
 true <- 1
@@ -167,8 +173,10 @@ PB <- 100 * abs((rowMeans(MAR.res[,, "estimate"]) - true)/ true)
 CR <- rowMeans(MAR.res[,, "2.5 %"] < true & true < MAR.res[,, "97.5 %"])
 AW <- rowMeans(MAR.res[,, "97.5 %"] - MAR.res[,, "2.5 %"])
 RMSE <- sqrt(rowMeans((MAR.res[,, "estimate"] - true)^2))
-data.frame(RB, PB, CR, AW, RMSE)
+imp_measures <- data.frame(RB, PB, CR, AW, RMSE)
 ```
+
+
 
 #### MNAR
 
@@ -208,8 +216,8 @@ MNAR.test.impute <- function(data, m = 5) {
 ```{r}
 simulate <- function(runs = 10) {
   res <- array(NA, dim = c(5, runs, 3))
-  dimnames(res) <- list(c("lightest_MNAR", "light_MNAR", "moderate_MNAR",
-                          "heavy_MNAR", "heaviest_MNAR"),
+  dimnames(res) <- list(c("lightest-MNAR", "light-MNAR", "moderate-MNAR",
+                          "heavy-MNAR", "heaviest-MNAR"),
                         as.character(1:runs),
                         c("estimate", "2.5 %","97.5 %"))
   for(run in 1:runs) {
@@ -249,7 +257,9 @@ PB <- 100 * abs((mean(MCAR.res[,, "estimate"]) - true)/ true)
 CR <- mean(MCAR.res[,, "2.5 %"] < true & true < MCAR.res[,, "97.5 %"])
 AW <- mean(MCAR.res[,, "97.5 %"] - MCAR.res[,, "2.5 %"])
 RMSE <- sqrt(mean(MCAR.res[,, "estimate"] - true)^2)
-data.frame(RB, PB, CR, AW, RMSE)
+MCAR_imp_measures <- data.frame(RB, PB, CR, AW, RMSE)
+
+MCAR_imp_measures
 ```
 
 ```{r}
@@ -260,20 +270,76 @@ true <- 1
 RB <- rowMeans(MAR.res[,, "estimate"]) - true
 PB <- 100 * abs((rowMeans(MAR.res[,, "estimate"]) - true)/ true)
 CR <- rowMeans(MAR.res[,, "2.5 %"] < true & true < MAR.res[,, "97.5 %"])
-AW <- rowMeans(MAR.res[,, "97.5 %"] - MAR.res[,, "2.5 %"])
+AW <- rowMeans(trunc((MAR.res[,, "97.5 %"] - MAR.res[,, "2.5 %"])*10^3)/10^3)
 RMSE <- sqrt(rowMeans((MAR.res[,, "estimate"] - true)^2))
-data.frame(RB, PB, CR, AW, RMSE)
+MAR_imp_measures <- data.frame(RB, PB, CR, AW, RMSE)
 ```
 
 ```{r}
-apply(MNAR.res, c(1, 3), mean, na.rm = TRUE)
+means <- as.data.frame(apply(MNAR.res, c(1, 3), mean, na.rm = TRUE))
 ```
 ```{r}
 true <- 1
 RB <- rowMeans(MNAR.res[,, "estimate"]) - true
 PB <- 100 * abs((rowMeans(MNAR.res[,, "estimate"]) - true)/ true)
 CR <- rowMeans(MNAR.res[,, "2.5 %"] < true & true < MNAR.res[,, "97.5 %"])
-AW <- rowMeans(MNAR.res[,, "97.5 %"] - MNAR.res[,, "2.5 %"])
+AW <- rowMeans(trunc((MNAR.res[,, "97.5 %"] - MNAR.res[,, "2.5 %"])*10^3)/10^3)
 RMSE <- sqrt(rowMeans((MNAR.res[,, "estimate"] - true)^2))
-data.frame(RB, PB, CR, AW, RMSE)
+MNAR_imp_measures <- data.frame(RB, PB, CR, AW, RMSE)
+MNAR_imp_measures
 ```
+
+
+
+```{r}
+raw_data <- rbind(MAR_imp_measures, MNAR_imp_measures[c(1, 3, 5),])
+processed_raw_data <- raw_data %>% mutate(mean = 1 + RB, lower = mean - AW, upper = mean + AW)
+processed_raw_data
+```
+
+
+
+```{r}
+base_data <- processed_raw_data %>% 
+  mutate(study = c("Complete", "MCAR", "light-MAR", "moderate-MAR", "heavy-MAR", "light-MNAR", "moderate-MNAR", "heavy-MNAR"),
+         CR = as.character(CR),
+         AW = as.character(AW)) %>%
+  select(study, CR, AW, mean, lower, upper)
+  
+  
+
+header <- tibble(study = c("Mechanism"),
+                 CR = c("Coverage-Rate"),
+                 AW = c("Average-Width"))
+
+forest_data <- bind_rows(header, base_data)
+forest_data
+```
+
+```{r}
+forest_data %>% 
+  forestplot(labeltext = c(study, CR, AW),
+             # txt_gp = 
+             is.summary = FALSE,
+             graph.pos = 2,
+             hrzl_lines = list("2" = gpar(lty = 2)),
+             clip = c(0.5, 1.5),
+             zero = 1,
+             col = fpColors(box = "royalblue",line = "darkblue", summary = "royalblue", hrz_lines = "#444444"))
+```
+
+
+
+
+
+
+
+
+# ```{r}
+# knitr::kable(means, align = "lccrr")
+# ```
+# 
+# 
+# ```{r}
+# kable(imp_measures, caption = "MNAR performance measures")
+# ```
