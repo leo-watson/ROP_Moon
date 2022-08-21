@@ -140,10 +140,10 @@ true <- c(20, 1, 2, 3, 4)
 Raw_Bias <- rowMeans(res[,, "estimate"]) - true
 Percent_Bias <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
 Coverage_Rate <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
-Average_Width <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
+Avg_Width <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
 RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
-MI_measures <- data.frame(Raw_Bias, Percent_Bias, Coverage_Rate, Average_Width, RMSE)
-knitr::kable(round(MI_measures, 3), align = "ccccc") %>% kable_styling()
+MI_measures <- data.frame(Percent_Bias, Coverage_Rate, Avg_Width, RMSE)
+knitr::kable(round(MI_measures, 3), align = "ccccc") %>% kable_styling(full_width = F) 
 ```
 
 ###  Listwise Deletion
@@ -203,7 +203,9 @@ Percent_Bias <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
 Coverage_Rate <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
 Average_Width <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
 RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
-LD_measures <- data.frame(Raw_Bias, Percent_Bias, Coverage_Rate, Average_Width, RMSE)
+LD_measures <- data.frame(Percent_Bias, Coverage_Rate, Avg_Width, RMSE)
+knitr::kable(round(LD_measures, 3), align = "ccccc") %>% kable_styling(full_width = F) 
+
 ```
 
 ```{r}

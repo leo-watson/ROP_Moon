@@ -136,11 +136,11 @@ true <- c(0, 1, 2)
 Raw_Bias <- rowMeans(res[,, "estimate"]) - true
 Percent_Bias <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
 Coverage_Rate <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
-Average_Width <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
+Avg_Width <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
 RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
-MI_measures <- data.frame(Raw_Bias, Percent_Bias, Coverage_Rate, Average_Width, RMSE)
+MI_measures <- data.frame(Percent_Bias, Coverage_Rate, Avg_Width, RMSE)
 MI_measures["Percent_Bias"][1,1] <- NA
-knitr::kable(round(MI_measures, 3), align = "ccccc") %>% kable_styling()
+knitr::kable(round(MI_measures, 3), align = "ccccc") %>% kable_styling() %>% kable_styling(full_width = F)
 
 ```
 
@@ -201,12 +201,12 @@ true <- c(0, 1, 2)
 Raw_Bias <- rowMeans(res[,, "estimate"]) - true
 Percent_Bias <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
 Coverage_Rate <- rowMeans(res[,, "2.5%"] < true & true < res[,, "97.5%"])
-Average_Width <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
+Avg_Width <- rowMeans(res[,, "97.5%"] - res[,, "2.5%"])
 RMSE <- sqrt(rowMeans((res[,, "estimate"] - true)^2))
-LD_measures <- data.frame(Raw_Bias, Percent_Bias, Coverage_Rate, Average_Width, RMSE)
+LD_measures <- data.frame(Percent_Bias, Coverage_Rate, Avg_Width, RMSE)
 LD_measures["Percent_Bias"][1,1] <- NA
 
-knitr::kable(round(LD_measures, 3), align = "ccccc") %>% kable_styling()
+knitr::kable(round(LD_measures, 3), align = "ccccc") %>% kable_styling() %>% kable_styling(full_width = F)
 
 ```
 
@@ -219,9 +219,14 @@ ListwiseDeletion <- mean(times_LD)
 
 ```{r}
 mean_times <- as.data.frame(rbind(Multiple_Imputation, ListwiseDeletion), col.names = "average_runtime")
-colnames(mean_times) <- "average-runtime"
+colnames(mean_times) <- "avg-runtime"
 mean_times
 knitr::kable(mean_times) %>% kable_styling(full_width = F)
+
+```
+```{r}
+samp_data <- data_mis[99:103, ]
+knitr::kable(samp_data) %>% kable_styling(full_width = F)
 
 ```
 

@@ -20,9 +20,12 @@ suppressPackageStartupMessages(library(tidyverse))
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-
-
+```{r}
+data <- create.data()
+fit <- with(data, glm(Y ~ x1 + x2, family = "binomial"))
+fit
+```
+ 
 ```{r}
 create.data <- function(beta_0 = 0, beta_1 = 1, beta_2 = 2, n = 200){
 # Data. Given this.
@@ -32,7 +35,7 @@ x2 = rnorm(n)
 # logistic regression.
 z = beta_0 + beta_1*x1 + beta_2*x2        # linear combination with a bias. Here, 
 # B_0 = 1, B_1 = 2. The coefficeints represent change in log odds. I.e. if 
-# x2 increases by 2, log odds increase by 2, i.e. odds of a "1" if x2 increases
+# x2 increases by 1, log odds increase by 2, i.e. odds of a "1" if x2 increases
 # by 2 is exp(2) = 7.38 higher than original x2.
 pr = 1/(1+exp(-z))         # pass through an inv-logit (sigmoid) function to
                            # to constrain to [0,1]; represents odds of event
