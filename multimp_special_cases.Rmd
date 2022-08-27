@@ -198,6 +198,10 @@ mean_times
 knitr::kable(mean_times) %>% kable_styling(full_width = F)
 ```
 ```{r}
+data <- as.data.frame(MCAR.make.missing(create.data(n = 10)))
+data
+knitr::kable(data[1:4,]) %>% kable_styling(full_width = F)
+
 ```
 
 
