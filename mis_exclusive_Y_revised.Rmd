@@ -178,7 +178,7 @@ data.frame(RB, PB, CR, AW, RMSE)
 ```
 
 ```{r}
-res <- res_MI2[[1]]
+res <- result_LD[[1]]
 true <- c(20, 1, 2, 3, 4)
 Raw_Bias <- rowMeans(res[,, "estimate"]) - true
 Percent_Bias <- 100 * abs((rowMeans(res[,, "estimate"]) - true)/ true)
