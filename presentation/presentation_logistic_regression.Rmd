@@ -108,7 +108,7 @@ simulate_MI2 <- function(runs = 100) {
 
 ```{r}
 # Run 100 iterations 
-res_MI2 <- simulate_MI2(100)
+res_MI2 <- simulate_MI2(1000)
 ```
 
 
@@ -182,7 +182,7 @@ simulate_LD <- function(runs = 100){
 ```
 
 ```{r}
-result_LD <- simulate_LD(100)
+result_LD <- simulate_LD(1000)
 
 ```
 
